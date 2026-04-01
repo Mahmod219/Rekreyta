@@ -1,6 +1,24 @@
-import { notFound } from "next/navigation";
-import { supabase } from "./supabase";
+"use server";
+import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
+import { getServerSession } from "next-auth";
+import { authConfig } from "../api/auth/[...nextauth]/route";
+
 export const getJobs = async function () {
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("published", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+  }
+
+  return data;
+};
+export const getJobsAdmin = async function () {
+  const session = await getServerSession(authConfig);
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("jobs")
     .select(
@@ -9,30 +27,17 @@ export const getJobs = async function () {
       applicants:applications(count) 
     `,
     )
-    .eq("published", true)
-    .order("created_at", { ascending: false });
+    .eq("created_by", session.user.id);
 
   if (error) {
-    console.error(error);
-    return []; // إرجاع مصفوفة فارغة لتجنب أخطاء الـ map لاحقاً
+    console.log(error);
   }
-
-  // الخطوة الناقصة: تحويل شكل البيانات
   const jobsWithCount = data.map((job) => ({
     ...job,
     // الوصول للرقم بداخل المصفوفة التي أعادها سوبابيس
     applicantsCount: job.applicants?.[0]?.count || 0,
   }));
-
   return jobsWithCount;
-};
-export const getJobsAdmin = async function () {
-  const { data, error } = await supabase.from("jobs").select("*");
-
-  if (error) {
-    console.log(error);
-  }
-  return data;
 };
 
 export async function getJob(id) {
@@ -44,18 +49,25 @@ export async function getJob(id) {
 
   if (error) {
     console.log(error.message);
-    notFound();
+    return null;
+  }
+
+  if (!data) {
+    return null;
   }
 
   return data;
 }
 
 export async function updateJobById(id, data) {
-  return supabase.from("jobs").update(data).eq("id", id);
+  const supabaseAdmin = getSupabaseAdmin();
+
+  return supabaseAdmin.from("jobs").update(data).eq("id", id);
 }
 
 export async function createJob(data) {
-  const { data: job, error } = await supabase
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: job, error } = await supabaseAdmin
     .from("jobs")
     .insert([data])
     .select()
@@ -69,15 +81,20 @@ export async function createJob(data) {
 }
 
 export async function deleteJobById(id) {
-  const { error } = await supabase.from("jobs").delete().eq("id", id);
+  const session = await getServerSession(authConfig);
+  const supabaseAuth = getSupabaseWithAuth(session);
+  const { data, error } = await supabaseAuth
+    .from("jobs")
+    .delete()
+    .eq("id", id)
+    .select();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  console.log("DELETE RESULT:", data, error);
 }
 
 export async function publishJobById(id, newStatus) {
-  const { error } = await supabase
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
     .from("jobs")
     .update({ published: newStatus })
     .eq("id", id);
@@ -91,6 +108,7 @@ export async function getRecentJobs() {
     .from("jobs")
     .select("*")
     .order("created_at", { ascending: false })
+    .eq("published", true)
     .limit(6); // جلب 5 فقط
 
   if (error) throw new Error("Could not fetch recent jobs");
@@ -99,7 +117,7 @@ export async function getRecentJobs() {
 
 export async function createProfile(data) {
   const { data: profile, error } = await supabase
-    .from("jobs")
+    .from("profiles")
     .insert([data])
     .select()
     .single();
@@ -111,54 +129,72 @@ export async function createProfile(data) {
   return profile;
 }
 
-export async function getAccountInfo(id) {
+// في ملف data-service.js
+
+export async function getAccountInfo() {
+  const session = await getServerSession(authConfig);
+
+  const supabase = getSupabaseWithAuth(session);
+
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", id)
-    .single();
+    .eq("id", session.user.id)
+    .maybeSingle();
 
   if (error) {
-    console.log(error.message);
-    notFound();
+    console.error(error);
+    return null;
   }
 
   return data;
 }
 
 export async function getUserApplications(id) {
-  const { data, error } = await supabase
+  const session = await getServerSession(authConfig);
+  const supabaseAuth = getSupabaseWithAuth(session);
+  const { data, error } = await supabaseAuth
     .from("applications")
     .select("*")
-    .eq("user_id", id);
+    .eq("user_id", id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.log(error.message);
-    notFound();
+    return [];
   }
 
-  return data;
+  return data || [];
 }
 
 export async function getUserAppliedJobs(id) {
-  const { data, error } = await supabase.from("jobs").select("*").eq("id", id);
+  const session = await getServerSession(authConfig);
+  const supabaseAuth = getSupabaseWithAuth(session);
+  const { data, error } = await supabaseAuth
+    .from("jobs")
+    .select("*")
+    .eq("id", id);
 
   if (error) {
     console.log(error.message);
-    notFound();
+    return [];
   }
 
-  return data;
+  return data || [];
 }
 
 export async function getApplicationsByJob(jobId) {
-  const { data, error } = await supabase
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
     .from("applications")
     .select(
       `
       id,
       status,
       created_at,
+      another_url,
+      cv_url,
+      coverletter,
 
       jobs (
         id,
@@ -171,9 +207,6 @@ export async function getApplicationsByJob(jobId) {
         firstname,
         lastname,
         email,
-        cv_url,
-        another_url,
-        coverletter,
          phone,
          address,
         zipcode,
@@ -186,8 +219,40 @@ export async function getApplicationsByJob(jobId) {
 
   if (error) {
     console.log(error.message);
-    notFound();
+    return [];
   }
+
+  return data || [];
+}
+
+export async function createNotification({
+  user_id,
+  title,
+  message,
+  type,
+  link,
+}) {
+  const supapaseAdmin = getSupabaseAdmin();
+  return await supapaseAdmin.from("notifications").insert([
+    {
+      user_id,
+      title,
+      message,
+      type,
+      link,
+    },
+  ]);
+}
+
+export async function getNotifications(userId) {
+  // const session = await getServerSession(authConfig);
+  // const supabaseAuth = getSupabaseWithAuth(session);
+  const supapaseAdmin = getSupabaseAdmin();
+  const { data } = await supapaseAdmin
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   return data;
 }

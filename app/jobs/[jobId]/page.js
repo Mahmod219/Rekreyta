@@ -1,25 +1,31 @@
-import Job from "@/app/_components/Job";
-import { getJob, getJobs } from "@/app/_lib/data-service";
+import { getJob } from "@/app/_lib/data-service";
+import { Job } from "app/_components/user";
+import { notFound } from "next/navigation";
 
-export async function generateStaticParams() {
-  const jobs = await getJobs();
+export async function generateMetadata({ params }) {
+  const resolvedParams = await params;
+  const jobId = resolvedParams.jobId;
+  const job = await getJob(jobId);
+  if (!job) return { title: "Jobbet hittades inte" };
 
-  const ids = jobs.map((job) => ({
-    jobId: String(job.id),
-  }));
-  return ids;
+  return {
+    title: `${job.title} hos ${job.company}`,
+    description: `Ansök till tjänsten som ${job.title} på ${job.company} i ${job.city}. Läs mer och skicka din ansökan via Rekreyta.`,
+  };
 }
 
 export default async function page({ params }) {
-  const { jobId } = await params;
+  const resolvedParams = await params;
+  const jobId = resolvedParams.jobId;
 
   const job = await getJob(jobId);
+  if (!job) {
+    notFound();
+  }
 
   return (
     <div>
-      <div>
-        <Job job={job} />
-      </div>
+      <Job job={job} />
     </div>
   );
 }

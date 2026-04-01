@@ -1,6 +1,7 @@
 import Image from "next/image";
-import SignInButton from "../_components/SignInButton";
+
 import signin from "@/public/signin.jpg";
+import { SignInButton } from "app/_components/shared";
 
 export const metadata = {
   title: "login",

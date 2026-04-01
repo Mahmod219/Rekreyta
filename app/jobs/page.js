@@ -1,8 +1,14 @@
-import JobCard from "@/app/_components/JobCard";
-import { getJobs } from "@/app/_lib/data-service";
 import jobs from "@/public/jobs.jpg";
+import { JobFilters } from "app/_components/shared";
+import JobCard from "app/_components/user/JobCard";
+import { getJobs } from "app/_lib/data-service";
 import Image from "next/image";
-import JobFilters from "../_components/JobFilters";
+
+export const metadata = {
+  title: "Lediga Jobb",
+  description:
+    "Sök och filtrera bland hundratals lediga tjänster i hela Sverige.",
+};
 
 export default async function JobsPage({ searchParams }) {
   const sParams = await searchParams;
@@ -29,7 +35,7 @@ export default async function JobsPage({ searchParams }) {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <section className="relative min-h-[80vh] lg:h-[70vh] w-full flex items-center py-20 overflow-hidden">
+      <section className="relative min-h-[80vh] lg:h-[70vh] w-full flex items-center  overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src={jobs}
@@ -42,15 +48,15 @@ export default async function JobsPage({ searchParams }) {
           <div className="absolute inset-0 bg-black/40 md:bg-linear-to-r md:from-black/80 md:to-transparent" />
         </div>
 
-        <div className="relative z-10 container mx-auto px-6">
-          <div className="max-w-5xl">
+        <div className="flex flex-col relative z-10 container mx-auto px-6">
+          <div className="">
             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-8">
               YOUR PATH TO <br />
               <span className="text-[#2ecc91]">THE DREAM JOB</span> <br />
               IN SWEDEN
             </h1>
 
-            <div className=" w-full space-y-4">
+            <div className="  w-full space-y-4">
               <JobFilters />
             </div>
           </div>

@@ -3,21 +3,21 @@
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
 
-import { jobSchema } from "./schemas/jobScheam";
+import { revalidatePath } from "next/cache";
 import {
-  updateJobById,
   createJob,
+  createNotification,
   deleteJobById,
   publishJobById,
 } from "./data-service";
-import { revalidatePath } from "next/cache";
-import { supabase } from "./supabase";
+import { applySchema } from "./schemas/applySchema";
+import { jobSchema } from "./schemas/jobSchema";
 import { profileSchema } from "./schemas/profileSchema";
-import { success } from "zod";
-import { applySchema } from "./schemas/applySchema ";
+import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
 
 export async function addJob(prevState, formData) {
   const session = await getServerSession(authConfig);
+  const supabaseAdmin = getSupabaseAdmin();
 
   if (!session || session.user.role !== "admin") {
     return { formError: "Not authorized" };
@@ -38,18 +38,20 @@ export async function addJob(prevState, formData) {
   let imageUrl = null;
   let filePath = null;
 
+  const userId = session.user.id;
+
   try {
     // ✅ رفع الصورة
     if (file && file.size > 0) {
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${userId}/${Date.now()}-${file.name}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from("job-images")
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrl } = supabase.storage
+      const { data: publicUrl } = supabaseAdmin.storage
         .from("job-images")
         .getPublicUrl(fileName);
 
@@ -61,7 +63,8 @@ export async function addJob(prevState, formData) {
     await createJob({
       ...result.data,
       image_url: imageUrl,
-      image_path: filePath, // 🔥 مهم للحذف لاحقاً
+      image_path: filePath,
+      created_by: session.user.id,
     });
 
     revalidatePath("/admin/joboffers");
@@ -83,7 +86,7 @@ export async function deleteJob(prevState, formData) {
   }
 
   const data = Object.fromEntries(formData);
-  const jobId = Number(data.jobofferId);
+  const jobId = data.jobofferId;
 
   try {
     // 1️⃣ جيب job
@@ -134,14 +137,15 @@ export async function updateJob(prevState, formData) {
   const session = await getServerSession(authConfig);
 
   if (!session || session.user.role !== "admin") {
-    return { formError: "You are not authorized to perform this action" };
+    return { formError: "You are not authorized" };
   }
+
+  const supabaseAdmin = getSupabaseAdmin();
 
   const data = Object.fromEntries(formData);
   const jobofferId = data.jobofferId;
-  const imageFile = data.image; // استلام الملف
+  const imageFile = data.image;
 
-  // تنظيف البيانات قبل الـ Validation
   delete data.jobofferId;
   delete data.image;
 
@@ -153,60 +157,60 @@ export async function updateJob(prevState, formData) {
   try {
     let updateData = { ...result.data };
 
-    // التحقق من وجود صورة جديدة مرفوعة
     if (imageFile && imageFile.size > 0) {
-      // 1. جلب بيانات الصورة القديمة من DB
-      const { data: currentJob } = await supabase
+      // 1️⃣ get old image
+      const { data: currentJob } = await supabaseAdmin
         .from("jobs")
         .select("image_path")
         .eq("id", jobofferId)
         .single();
 
-      // 2. حذف الصورة القديمة من الـ Storage إذا وجدت
+      // 2️⃣ delete old image
       if (currentJob?.image_path) {
-        await supabase.storage
+        await supabaseAdmin.storage
           .from("job-images")
           .remove([currentJob.image_path]);
       }
 
-      // 3. رفع الصورة الجديدة
+      // 3️⃣ upload new image
       const fileName = `job-${Date.now()}-${imageFile.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("job-images")
-        .upload(fileName, imageFile);
 
-      if (uploadError) throw new Error("Upload failed");
+      const { data: uploadData, error: uploadError } =
+        await supabaseAdmin.storage
+          .from("job-images")
+          .upload(fileName, imageFile);
 
-      // 4. الحصول على الرابط العام (Public URL)
-      const { data: publicUrlData } = supabase.storage
+      if (uploadError) throw uploadError;
+
+      // 4️⃣ public url
+      const { data: publicUrlData } = supabaseAdmin.storage
         .from("job-images")
         .getPublicUrl(fileName);
 
-      // تحديث الحقول المطلوبة في الكائن الذي سيُرسل للـ DB
       updateData.image_path = uploadData.path;
       updateData.image_url = publicUrlData.publicUrl;
     }
 
-    // تحديث قاعدة البيانات
-    const { error: updateError } = await supabase
+    // 🔥 update باستخدام admin
+    const { error } = await supabaseAdmin
       .from("jobs")
       .update(updateData)
       .eq("id", jobofferId);
 
-    if (updateError) throw updateError;
+    if (error) throw error;
 
     revalidatePath("/admin/joboffers");
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { formError: "Failed to update job offer" };
+    return { formError: "Failed to update job" };
   }
 }
 
 export default async function profileInfo(prevState, formData) {
   const session = await getServerSession(authConfig);
-
-  if (!session || session.user.role !== "user") {
+  const supabase = getSupabaseWithAuth(session);
+  if (!session) {
     return { formError: "Not authorized" };
   }
 
@@ -222,9 +226,11 @@ export default async function profileInfo(prevState, formData) {
 
   let cvUrl, cvPath, clUrl, clPath;
 
+  const userId = session.user.id;
+
   try {
     if (cv_file && cv_file.size > 0) {
-      const cvFileName = `${Date.now()}-${cv_file.name}`;
+      const cvFileName = `${userId}/${Date.now()}-${cv_file.name}`;
       const { error: cvError } = await supabase.storage
         .from("cv-files")
         .upload(cvFileName, cv_file);
@@ -240,7 +246,7 @@ export default async function profileInfo(prevState, formData) {
     }
 
     if (another_file && another_file.size > 0) {
-      const clFileName = `${Date.now()}-${another_file.name}`;
+      const clFileName = `${userId}/${Date.now()}-${another_file.name}`;
       const { error: clError } = await supabase.storage
         .from("another-files")
         .upload(clFileName, another_file);
@@ -286,86 +292,249 @@ export default async function profileInfo(prevState, formData) {
 
 export async function deleteFile(fileType) {
   const session = await getServerSession(authConfig);
+  const supabaseAdmin = getSupabaseAdmin();
   const userId = session?.user?.id;
 
   if (!userId) return { error: "Not authorized" };
 
-  // 1. جلب المسارات باستخدام id
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("cv_path, another_path")
-    .eq("id", userId) // 👈 تم التغيير إلى id
-    .single();
+  try {
+    // 1. جلب البيانات (تأكد من جلب المسار الصحيح)
+    const { data: profile, error: fetchError } = await supabaseAdmin
+      .from("profiles")
+      .select("cv_path, another_path")
+      .eq("id", userId)
+      .single();
 
-  if (!profile) return { error: "Profile not found" };
+    if (fetchError || !profile) throw new Error("Profile not found");
 
-  const isCv = fileType === "cv";
-  const filePath = isCv ? profile.cv_path : profile.another_path;
-  const bucket = isCv ? "cv-files" : "another-files";
+    const isCv = fileType === "cv";
+    const filePath = isCv ? profile.cv_path : profile.another_path;
+    const bucket = isCv ? "cv-files" : "another-files";
 
-  if (filePath) {
-    // 2. حذف الملف من Storage
-    await supabase.storage.from(bucket).remove([filePath]);
+    console.log("filepath", filePath);
 
-    // 3. تصفير الحقول في القاعدة باستخدام id
-    const updateData = isCv
-      ? { cv_url: null, cv_path: null }
-      : { another_url: null, another_path: null };
+    if (filePath) {
+      // 2. حذف الملف من Storage
+      // ملاحظة: تأكد أن filePath هو المسار الكامل داخل الـ Bucket
+      const { error: storageError } = await supabaseAdmin.storage
+        .from(bucket)
+        .remove([filePath]);
 
-    await supabase.from("profiles").update(updateData).eq("id", userId); // 👈 تم التغيير إلى id
+      if (storageError) {
+        console.error("Storage Delete Error:", storageError);
+        // لا نتوقف هنا، قد يكون الملف محذوفاً أصلاً من الـ storage ونريد تنظيف الداتابيز
+      }
+
+      // 3. تصفير الحقول في قاعدة البيانات (هذا الجزء هو الأهم لليوزر)
+      const updateData = isCv
+        ? { cv_url: null, cv_path: null }
+        : { another_url: null, another_path: null };
+
+      const { error: dbError } = await supabaseAdmin
+        .from("profiles")
+        .update(updateData)
+        .eq("id", userId);
+
+      if (dbError) throw dbError;
+    }
+
+    revalidatePath("/account/info"); // تأكد من المسار الصحيح للصفحة
+    return { success: true };
+  } catch (error) {
+    console.error("Delete Action Error:", error.message);
+    return { error: error.message };
   }
-
-  revalidatePath("/account");
-  return { success: true };
 }
 
 export async function applyToJobb(prevState, formData) {
   const session = await getServerSession(authConfig);
-
-  if (!session) return { formError: "You must be logged in" };
-
-  const data = Object.fromEntries(formData);
-  const result = applySchema.safeParse(data);
-
-  if (!result.success) {
-    return { fieldErrors: result.error.flatten().fieldErrors };
-  }
+  if (!session) return { formError: "Du måste vara inloggad" };
 
   const userId = session.user.id;
+  const supabase = getSupabaseWithAuth(session);
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // 1. استخراج البيانات من الفورم
   const jobId = formData.get("jobId");
+  const firstName = formData.get("firstname");
+  const lastName = formData.get("lastname");
+  const coverLetter = formData.get("coverletter");
+  const fullName = `${firstName} ${lastName}`;
 
-  const { data: existing } = await supabase
-    .from("applications")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("job_id", jobId)
-    .single();
+  // الملفات الجديدة من الـ input
+  const newCvFile = formData.get("cv");
+  const newAnotherFile = formData.get("another");
 
-  if (existing) return { formError: "You already applied for this job" };
+  try {
+    // 2. جلب بيانات البروفايل الحالية (للحصول على الروابط والمسارات القديمة)
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("cv_url, cv_path, another_url, another_path")
+      .eq("id", userId)
+      .single();
 
-  const { error } = await supabase.from("applications").insert({
-    user_id: userId,
-    job_id: jobId,
-    status: "pending",
-  });
+    // 3. معالجة السيرة الذاتية (CV)
+    let finalCvUrl = profile?.cv_url;
+    let finalCvPath = profile?.cv_path;
 
-  if (error) {
-    return { formError: "Somthing went wrong" };
+    if (newCvFile && newCvFile.size > 0) {
+      const cvFileName = `${userId}/${Date.now()}-cv-${newCvFile.name}`;
+      const { error: cvError } = await supabaseAdmin.storage
+        .from("cv-files")
+        .upload(cvFileName, newCvFile);
+
+      if (cvError) throw new Error(`CV Upload Error: ${cvError.message}`);
+
+      finalCvUrl = supabaseAdmin.storage
+        .from("cv-files")
+        .getPublicUrl(cvFileName).data.publicUrl;
+      finalCvPath = cvFileName; // تحديث المسار الجديد
+    }
+
+    // 4. معالجة الملف الإضافي (Another/Portfolio)
+    let finalAnotherUrl = profile?.another_url;
+    let finalAnotherPath = profile?.another_path;
+
+    if (newAnotherFile && newAnotherFile.size > 0) {
+      const clFileName = `${userId}/${Date.now()}-portfolio-${newAnotherFile.name}`;
+      const { error: clError } = await supabaseAdmin.storage
+        .from("another-files")
+        .upload(clFileName, newAnotherFile);
+
+      if (clError)
+        throw new Error(`Portfolio Upload Error: ${clError.message}`);
+
+      finalAnotherUrl = supabaseAdmin.storage
+        .from("another-files")
+        .getPublicUrl(clFileName).data.publicUrl;
+      finalAnotherPath = clFileName; // تحديث المسار الجديد
+    }
+    const { data: existingApplication, error: checkError } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("job_id", jobId)
+      .single(); // نتوقع نتيجة واحدة فقط إذا وجد
+
+    // 2. إذا وجدنا بيانات، فهذا يعني أنه قدم من قبل
+    if (existingApplication) {
+      throw new Error("Du har redan skickat en ansökan för det här jobbet.");
+      // ترجمة: لقد قمت بالفعل بإرسال طلب لهذه الوظيفة.
+    }
+    // 5. حفظ الطلب في جدول applications
+    const { error: dbError } = await supabase.from("applications").insert({
+      user_id: userId,
+      job_id: jobId,
+      status: "inkommen",
+      cv_url: finalCvUrl,
+      another_url: finalAnotherUrl,
+      coverletter: coverLetter,
+    });
+
+    if (dbError) throw dbError;
+
+    // 6. تحديث البروفايل (عشان يضل السيفي والباث محدثين دائماً في حساب المستخدم)
+    const profileUpdate = {};
+    if (newCvFile && newCvFile.size > 0) {
+      profileUpdate.cv_url = finalCvUrl;
+      profileUpdate.cv_path = finalCvPath;
+    }
+    if (newAnotherFile && newAnotherFile.size > 0) {
+      profileUpdate.another_url = finalAnotherUrl;
+      profileUpdate.another_path = finalAnotherPath;
+    }
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await supabaseAdmin
+        .from("profiles")
+        .update(profileUpdate)
+        .eq("id", userId);
+    }
+
+    // 7. إرسال إشعار للأدمن (صاحب الوظيفة)
+    const { data: job } = await supabaseAdmin
+      .from("jobs")
+      .select("created_by, title")
+      .eq("id", jobId)
+      .single();
+
+    if (job?.created_by) {
+      await supabaseAdmin.from("notifications").insert({
+        user_id: job.created_by,
+        title: "Ny arbetssökande",
+        message: `${fullName} ansökt om "${job.title}"`,
+        type: "application",
+        link: `/admin/applications/${jobId}`,
+      });
+    }
+
+    revalidatePath("/jobs");
+    revalidatePath("/account/info"); // تحديث صفحة البروفايل أيضاً لأن البيانات تغيرت
+    return { success: true };
+  } catch (error) {
+    console.error("Apply Job Error:", error);
+    return { formError: error.message };
   }
-  revalidatePath("/jobs/");
-  return { success: true };
 }
 
 export async function updateApplicationStatus(applicationId, jobId, newStatus) {
-  const { error } = await supabase
+  const session = await getServerSession(authConfig);
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!session) return { formError: "Du måste vara inloggad" };
+
+  const userId = session.user.id;
+
+  const { data: job } = await supabaseAdmin
+    .from("jobs")
+    .select(" title")
+    .eq("id", jobId)
+    .single();
+
+  const jobTitle = job.title;
+
+  const { error } = await supabaseAdmin
     .from("applications")
     .update({ status: newStatus })
     .eq("id", applicationId);
 
   if (error) {
-    console.error("Error updating status:", error.message);
+    console.log("Error updating status:", error.message);
     throw new Error("Could not update application status");
   }
 
+  createNotification({
+    user_id: userId,
+    title: "Application update",
+    message: `Din ansökan till ${jobTitle} status uppdaterad till ${newStatus}`,
+    type: "status",
+    link: `/account/applications`,
+  });
+
   revalidatePath(`/admin/applications/${jobId}`);
+}
+
+export async function markNotificationAsRead(notificationId) {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId);
+
+  if (error) throw new Error("Kunde inte uppdatera aviseringen");
+
+  // لإجبار Next.js على تحديث البيانات في الصفحة فوراً
+  revalidatePath("/notifications");
+}
+
+export async function deleteAllNotifications(userId) {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("notifications")
+    .delete()
+    .eq("user_id", userId);
+
+  if (error) throw new Error("Kunde inte rensa aviseringen");
+
+  // لإجبار Next.js على تحديث البيانات في الصفحة فوراً
+  revalidatePath("/notifications");
 }

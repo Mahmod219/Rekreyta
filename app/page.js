@@ -2,12 +2,10 @@ import background from "@/public/background.jpg";
 import Image from "next/image";
 import Link from "next/link";
 
-import HowItWorks from "./_components/HowItWorks";
-import LatestOpportunities from "./_components/LatestOpportunities";
-import Services from "./_components/Services";
-import Statistics from "./_components/Statistics";
 import { Suspense } from "react";
-import Spinner from "./_components/Spinner";
+import { LatestOpportunities } from "./_components/user";
+import { HowItWorks, Services, Statistics } from "./_components/ui";
+import { Spinner } from "./_components/shared";
 
 export default async function Page() {
   return (
@@ -21,7 +19,7 @@ export default async function Page() {
             fill
             priority
             placeholder="blur"
-            quality={100}
+            quality={75}
             className="object-cover object-center scale-105"
           />
           <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/40 to-transparent" />

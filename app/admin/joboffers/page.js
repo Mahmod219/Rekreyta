@@ -1,61 +1,53 @@
-import AddJobButton from "@/app/_components/AddJobButton";
-import JobFilters from "@/app/_components/JobFilters";
-import JobsListAdmin from "@/app/_components/JobsListAdmin";
-import Spinner from "@/app/_components/Spinner";
+import { JobsListAdmin } from "app/_components/admin";
+import { JobFilters, Spinner } from "app/_components/shared";
+import { AddJobButton } from "app/_components/ui";
 import { Suspense } from "react";
 
-export default function Page({ searchParams }) {
+export default async function Page({ searchParams }) {
+  const sParams = await searchParams;
+
   return (
-    <div className="space-y-6">
-      {/* 1. Header Section: العنوان وزر الإضافة */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-        <div>
-          <h2 className="text-2xl font-black text-[#2d2e3e] tracking-tight">
-            Job <span className="text-[#2ecc91]">Postings</span>
+    <div className="max-w-6xl mx-auto  px-6 space-y-10">
+      {/* 1. الهيدر مع زر الإضافة */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+        <div className="space-y-2">
+          <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter">
+            Jobb <span className="text-[#2ecc91]">Annonser</span>
           </h2>
-          <p className="text-gray-500 text-sm font-medium">
-            Manage, edit, and publish your job offers from here.
+          <p className="text-gray-500 font-medium text-lg leading-relaxed">
+            Hantera, redigera och publicera dina tjänster härifrån.
           </p>
         </div>
-
-        {/* زر الإضافة سيأخذ العرض الكامل في الموبايل */}
-        <div className="w-full sm:w-auto">
+        <div className="shrink-0">
           <AddJobButton />
         </div>
       </div>
 
-      <div className=" w-full space-y-4">
+      {/* 3. أدوات الفلترة والبحث */}
+      <div className="bg-white/80 backdrop-blur-md p-6 rounded-4xl shadow-md border border-gray-100">
         <JobFilters />
       </div>
 
-      {/* 2. Statistics Overview (إضافة اختيارية تعطي شكل احترافي) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Jobs"
-          value="24"
-          color="bg-gray-50 text-gray-600"
-        />
-        <StatCard label="Live" value="18" color="bg-green-50 text-[#2ecc91]" />
-        <StatCard
-          label="Drafts"
-          value="6"
-          color="bg-orange-50 text-orange-600"
-        />
-        <StatCard label="Expired" value="2" color="bg-red-50 text-red-600" />
-      </div>
+      {/* 4. قائمة الوظائف مع Suspense */}
+      <div className="space-y-4">
+        <div className="px-2">
+          <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">
+            Lista över annonser
+          </h3>
+        </div>
 
-      {/* 3. Jobs List Section */}
-      <div className="bg-gray-50/50 rounded-3xl min-h-100">
         <Suspense
           fallback={
-            <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border border-gray-100">
               <Spinner />
+              <p className="mt-4 text-gray-400 font-medium">
+                Laddar annonser...
+              </p>
             </div>
           }
         >
-          {/* تأكد أن JobsListAdmin يعرض الكروت بمسافات (gap) جيدة */}
           <div className="grid grid-cols-1 gap-4">
-            <JobsListAdmin searchParams={searchParams} />
+            <JobsListAdmin searchParams={sParams} />
           </div>
         </Suspense>
       </div>
@@ -63,17 +55,16 @@ export default function Page({ searchParams }) {
   );
 }
 
-// مكون فرعي صغير للإحصائيات السريعة
-function StatCard({ label, value, color }) {
+function StatCard({ label, value, color, bgColor }) {
   return (
-    <div
-      className={`p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center bg-white`}
-    >
-      <span className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">
-        {label}
-      </span>
-      <span className={`text-xl font-black ${color.split(" ")[1]}`}>
+    <div className="bg-white p-6 rounded-4xl border border-gray-100 shadow-sm flex flex-col items-center text-center transition-all hover:shadow-md hover:-translate-y-1">
+      <div
+        className={`${bgColor} ${color} w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-2xl font-black`}
+      >
         {value}
+      </div>
+      <span className="text-xs font-black uppercase tracking-widest text-gray-400">
+        {label}
       </span>
     </div>
   );

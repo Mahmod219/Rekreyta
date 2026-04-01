@@ -1,5 +1,4 @@
-import React from "react";
-import ContactUs from "../_components/ContactUs";
+import { ContactUs } from "app/_components/ui";
 
 export default function page() {
   return (

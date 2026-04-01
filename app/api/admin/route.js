@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { authConfig } from "../auth/[...nextauth]/route";
 
 export async function POST() {
   const session = await getServerSession(authConfig);

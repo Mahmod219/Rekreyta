@@ -7,8 +7,6 @@ export default async function page() {
   if (!session) {
     redirect("/login");
   }
-  if (session.user.role !== "admin") {
-    redirect("/login");
-  }
+
   return <div>{session.user.name}</div>;
 }

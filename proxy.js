@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-// تغيير اسم الفانكشن إلى proxy تماشياً مع التحديث الجديد
+// يجب أن يكون اسم الفانكشن middleware ليعمل المحرك بشكل مستقر
 export async function proxy(request) {
   const token = await getToken({
     req: request,
@@ -17,12 +17,10 @@ export async function proxy(request) {
     }
   }
 
-  // 2. حماية صفحة الحساب (Account) - جديد ✨
-  // إذا حاول شخص دخول /account وهو غير مسجل دخول
+  // 2. حماية صفحة الحساب (Account)
   if (pathname.startsWith("/account")) {
     if (!token) {
       const loginUrl = new URL("/login", request.url);
-      // إضافة parameter للعودة لنفس الصفحة بعد تسجيل الدخول
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -30,20 +28,19 @@ export async function proxy(request) {
 
   // 3. منع المسجلين من دخول صفحة اللوجن مرة أخرى
   if (pathname === "/login" && token) {
-    if (token.role === "admin") {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
-    return NextResponse.redirect(new URL("/jobs", request.url));
+    const target = token.role === "admin" ? "/admin" : "/jobs";
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
   return NextResponse.next();
 }
 
-// تحديث الـ matcher ليشمل المسارات الجديدة
+// الـ matcher يجب أن يكون محدداً جداً لمنع الـ Loops
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/account/:path*",
     "/login",
-    "/account/:path*", // حماية كل ما يخص الحساب
+    // حذفنا سطر الـ "Catch-all" العشوائي الذي كان يسبب الحلقات اللانهائية
   ],
 };

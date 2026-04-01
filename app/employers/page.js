@@ -1,4 +1,4 @@
-import ForEmployers from "../_components/ForEmployers";
+import { ForEmployers } from "app/_components/ui";
 
 export default function page() {
   return (
