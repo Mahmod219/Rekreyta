@@ -1,4 +1,5 @@
 "use client";
+import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import {
   BriefcaseIcon,
   BuildingOffice2Icon,
@@ -14,14 +15,17 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { Dropdown } from "../ui";
 import { Modal } from "../shared";
+
 import DeleteJob from "./DeleteJob";
-import PublishButton from "./PublishButton";
+import DuplicateButton from "./DuplicateButton";
 import EditJobForm from "./EditJobForm";
+import PublishButton from "./PublishButton";
+import Dropdown from "../ui/Dropdown";
 
 export default function JobCardAdmin({ job }) {
   const {
+    id,
     image_url,
     company,
     created_at,
@@ -34,16 +38,16 @@ export default function JobCardAdmin({ job }) {
   } = job;
 
   const isPublished = job.published;
-  const publishText = isPublished ? "Unpublish" : "Publish";
+  const publishText = isPublished ? "Avpublicera" : "Publicera";
   const PublishIcon = isPublished ? EyeSlashIcon : EyeIcon;
 
   return (
     <div
-      className={`relative group rounded-3xl border p-5 transition-all duration-300 shadow-sm hover:shadow-md
+      className={`relative group rounded-3xl border border-gray-300/50 p-5 transition-all duration-300 shadow-sm hover:shadow-md
       ${
         isPublished
           ? "bg-white border-gray-100 hover:border-[#2ecc91]/30"
-          : "bg-gray-50 border-gray-200 opacity-90"
+          : "bg-gray-50 border-gray-200 "
       }
     `}
     >
@@ -107,11 +111,11 @@ export default function JobCardAdmin({ job }) {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-gray-50">
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase">
               <CalendarIcon className="h-3.5 w-3.5" />
-              Posted: {new Date(created_at).toLocaleDateString("en-GB")}
+              Publicerad: {new Date(created_at).toLocaleDateString("en-GB")}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-lg w-fit">
               <CalendarDaysIcon className="h-3.5 w-3.5" />
-              Deadline:{" "}
+              Sista ansökan:{" "}
               {new Date(application_deadline).toLocaleDateString("en-GB")}
             </div>
           </div>
@@ -130,9 +134,9 @@ export default function JobCardAdmin({ job }) {
             <Dropdown.Menu>
               <ActionItem
                 icon={<PencilIcon />}
-                text="Edit"
+                text="Ändra"
                 modalContent={<EditJobForm jobOffer={job} />}
-                title="Edit Job"
+                title="Åndra Jobb"
                 job={job}
               />
               <ActionItem
@@ -141,10 +145,16 @@ export default function JobCardAdmin({ job }) {
                 modalContent={<PublishButton jobOffer={job} />}
                 job={job}
               />
+              <ActionItem
+                icon={<DocumentDuplicateIcon />}
+                text="Kopia"
+                modalContent={<DuplicateButton jobOffer={job} />}
+                job={job}
+              />
               <div className="border-t border-gray-50 my-1"></div>
               <ActionItem
                 icon={<TrashIcon />}
-                text="Delete"
+                text="Radera"
                 modalContent={<DeleteJob jobOffer={job} />}
                 variant="danger"
                 job={job}
@@ -177,31 +187,40 @@ function StatusBadge({ isPublished }) {
         isPublished ? "bg-[#2ecc91] text-white " : "bg-gray-500 text-white "
       }`}
     >
-      {isPublished ? "Live" : "Draft"}
+      {isPublished ? "Aktiv" : "Utkast"}
     </span>
   );
 }
 
-function ActionItem({ icon, text, modalContent, title, variant, job }) {
+function ActionItem({ icon, text, modalContent, title, variant }) {
+  const windowName = text.toLowerCase();
+
   return (
     <Modal>
-      <Modal.Open>
+      {/* نجعل الـ Modal.Open هو الذي يغلف الـ Item */}
+      <Modal.Open opens={windowName}>
         <Dropdown.Item>
           <div
-            className={`flex items-center gap-3 font-bold ${variant === "danger" ? "text-red-500" : "text-gray-700"}`}
+            className={`flex items-center gap-3 font-bold ${
+              variant === "danger" ? "text-red-500" : "text-[#2d2e3e]"
+            }`}
           >
             <span className="w-4 h-4">{icon}</span>
             <span>{text}</span>
           </div>
         </Dropdown.Item>
       </Modal.Open>
-      <Modal.Window>
-        {title && (
-          <h2 className="mb-6 text-2xl font-black text-[#2d2e3e] uppercase">
-            {title}
-          </h2>
-        )}
-        {modalContent}
+
+      {/* النافذة ستخرج عبر الـ Portal فلا خوف عليها */}
+      <Modal.Window name={windowName}>
+        <div className="text-left p-2">
+          {title && (
+            <h2 className="mb-6 text-lg font-black text-[#2d2e3e] uppercase tracking-tight">
+              {title}
+            </h2>
+          )}
+          {modalContent}
+        </div>
       </Modal.Window>
     </Modal>
   );

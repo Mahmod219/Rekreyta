@@ -3,8 +3,8 @@
 import { useFormStatus } from "react-dom";
 
 export default function SubmitButton({
-  text = "Save Changes",
-  pendingText = "Saving...",
+  text = "Spara ändringar",
+  pendingText = "Sparande...",
   className = "",
 }) {
   const { pending } = useFormStatus();

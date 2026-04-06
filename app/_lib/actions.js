@@ -14,6 +14,8 @@ import { applySchema } from "./schemas/applySchema";
 import { jobSchema } from "./schemas/jobSchema";
 import { profileSchema } from "./schemas/profileSchema";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
+import { title } from "node:process";
+import { success } from "zod";
 
 export async function addJob(prevState, formData) {
   const session = await getServerSession(authConfig);
@@ -73,7 +75,7 @@ export async function addJob(prevState, formData) {
   } catch (error) {
     console.error("Error in addJob:", error);
     return {
-      formError: `Something went wrong on the server: ${error.message}`,
+      formError: `Något gick fel på servern: ${error.message}`,
     };
   }
 }
@@ -81,8 +83,10 @@ export async function addJob(prevState, formData) {
 export async function deleteJob(prevState, formData) {
   const session = await getServerSession(authConfig);
 
+  const supabaseAdmin = getSupabaseAdmin();
+
   if (!session || session.user.role !== "admin") {
-    return { formError: "You are not authorized to perform this action" };
+    return { formError: "Du har inte behörighet att utföra den här åtgärden" };
   }
 
   const data = Object.fromEntries(formData);
@@ -90,7 +94,7 @@ export async function deleteJob(prevState, formData) {
 
   try {
     // 1️⃣ جيب job
-    const { data: job } = await supabase
+    const { data: job } = await supabaseAdmin
       .from("jobs")
       .select("image_path")
       .eq("id", jobId)
@@ -98,7 +102,7 @@ export async function deleteJob(prevState, formData) {
 
     // 2️⃣ احذف الصورة
     if (job?.image_path) {
-      await supabase.storage.from("job-images").remove([job.image_path]);
+      await supabaseAdmin.storage.from("job-images").remove([job.image_path]);
     }
 
     // 3️⃣ احذف job
@@ -109,7 +113,7 @@ export async function deleteJob(prevState, formData) {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { formError: "Delete failed" };
+    return { formError: "Något gick fel" };
   }
 }
 
@@ -117,7 +121,7 @@ export async function publishJob(prevState, formData) {
   const session = await getServerSession(authConfig);
 
   if (!session || session.user.role !== "admin") {
-    return { formError: "You are not authorized to perform this action" };
+    return { formError: "Du har inte behörighet att utföra den här åtgärden" };
   }
 
   const data = Object.fromEntries(formData);
@@ -126,10 +130,9 @@ export async function publishJob(prevState, formData) {
 
   try {
     await publishJobById(jobofferId, !currentStatus);
-    revalidatePath("/admin/joboffers");
     return { success: true };
   } catch (error) {
-    return { formError: "Something went wrong on the server" };
+    return { formError: "Något gick fel" };
   }
 }
 
@@ -137,7 +140,7 @@ export async function updateJob(prevState, formData) {
   const session = await getServerSession(authConfig);
 
   if (!session || session.user.role !== "admin") {
-    return { formError: "You are not authorized" };
+    return { formError: "Du är inte auktoriserad" };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -203,15 +206,107 @@ export async function updateJob(prevState, formData) {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { formError: "Failed to update job" };
+    return { formError: "Misslyckades med att uppdatera jobb" };
   }
 }
 
-export default async function profileInfo(prevState, formData) {
+export async function duplicateData(pravState, formData) {
+  const session = await getServerSession(authConfig);
+
+  if (!session || session.user.role !== "admin") {
+    return { formError: "Du har inte behörighet att utföra den här åtgärden" };
+  }
+  const supabaseAdmin = getSupabaseAdmin();
+
+  const data = Object.fromEntries(formData);
+  const jobId = data.jobofferId;
+
+  const { data: orginalJob, error } = await supabaseAdmin
+    .from("jobs")
+    .select("*")
+    .eq("id", jobId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching job", error);
+    throw new Error("Varning: Vi kunde inte hitta funktionen att kopiera.");
+  }
+  const { id, created_at, ...jobData } = orginalJob;
+
+  const duplicatedData = {
+    ...jobData,
+    title: `${jobData.title} (Kopia)`,
+    published: false,
+  };
+
+  const { error: insertError } = await supabaseAdmin
+    .from("jobs")
+    .insert([duplicatedData]);
+
+  if (insertError) {
+    console.log("Error inserting duplicate:", insertError);
+    throw new Error("Det gick inte att skapa en kopia av jobbet");
+  }
+  revalidatePath("/admin/joboffers");
+  return { success: true };
+}
+
+export async function savedJob(jobId) {
+  const session = await getServerSession(authConfig);
+
+  // 1. التحقق من تسجيل الدخول
+  if (!session) {
+    throw new Error("Du måste vara inloggad för");
+  }
+
+  const userId = session.user.id;
+
+  // 2. التحقق هل الوظيفة محفوظة مسبقاً؟
+  const { data: existing, error: fetchError } = await supabase
+    .from("savedJobs")
+    .select("id") // نحتاج فقط التأكد من الوجود
+    .eq("user_id", userId)
+    .eq("job_id", jobId)
+    .single(); // جلب عنصر واحد فقط
+
+  // 3. منطق التبديل (Toggle Logic)
+
+  // أ: إذا كانت موجودة -> قم بحذفها
+  if (existing) {
+    const { error: deleteError } = await supabase
+      .from("savedJobs")
+      .delete() // الطريقة الصحيحة للحذف في Supabase هي .delete()
+      .eq("user_id", userId)
+      .eq("job_id", jobId);
+
+    if (deleteError)
+      throw new Error("Misslyckades med att ta bort från sparade jobb");
+
+    revalidatePath("/");
+    revalidatePath("/jobs");
+    return { success: true, action: "removed" };
+  }
+
+  // ب: إذا لم تكن موجودة -> قم بإضافتها
+  const { error: insertError } = await supabase
+    .from("savedJobs")
+    .insert([{ user_id: userId, job_id: jobId }]);
+
+  if (insertError) {
+    console.error("Fel vid infogning av sparat jobb:", insertError);
+    throw new Error("Misslyckades med att spara jobbet");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/jobs");
+  return { success: true, action: "sparad" };
+}
+
+export async function profileInfo(prevState, formData) {
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseWithAuth(session);
   if (!session) {
-    return { formError: "Not authorized" };
+    return { formError: "Inte auktoriserad" };
   }
 
   const cv_file = formData.get("cv");
@@ -285,7 +380,7 @@ export default async function profileInfo(prevState, formData) {
     revalidatePath("/account/info");
     return { success: true };
   } catch (error) {
-    console.error("Error in profileInfo:", error);
+    console.error("Fel i profilinformation:", error);
     return { formError: `Server error: ${error.message}` };
   }
 }
@@ -295,7 +390,7 @@ export async function deleteFile(fileType) {
   const supabaseAdmin = getSupabaseAdmin();
   const userId = session?.user?.id;
 
-  if (!userId) return { error: "Not authorized" };
+  if (!userId) return { error: "Inte auktoriserad" };
 
   try {
     // 1. جلب البيانات (تأكد من جلب المسار الصحيح)
@@ -305,7 +400,7 @@ export async function deleteFile(fileType) {
       .eq("id", userId)
       .single();
 
-    if (fetchError || !profile) throw new Error("Profile not found");
+    if (fetchError || !profile) throw new Error("Profilen hittades inte");
 
     const isCv = fileType === "cv";
     const filePath = isCv ? profile.cv_path : profile.another_path;
@@ -321,7 +416,7 @@ export async function deleteFile(fileType) {
         .remove([filePath]);
 
       if (storageError) {
-        console.error("Storage Delete Error:", storageError);
+        console.error("Fel vid borttagning av lagring:", storageError);
         // لا نتوقف هنا، قد يكون الملف محذوفاً أصلاً من الـ storage ونريد تنظيف الداتابيز
       }
 
@@ -341,7 +436,7 @@ export async function deleteFile(fileType) {
     revalidatePath("/account/info"); // تأكد من المسار الصحيح للصفحة
     return { success: true };
   } catch (error) {
-    console.error("Delete Action Error:", error.message);
+    console.error("Fel vid raderingsåtgärd:", error.message);
     return { error: error.message };
   }
 }
@@ -402,7 +497,7 @@ export async function applyToJobb(prevState, formData) {
         .upload(clFileName, newAnotherFile);
 
       if (clError)
-        throw new Error(`Portfolio Upload Error: ${clError.message}`);
+        throw new Error(`Fel vid uppladdning av portfölj: ${clError.message}`);
 
       finalAnotherUrl = supabaseAdmin.storage
         .from("another-files")
@@ -499,12 +594,12 @@ export async function updateApplicationStatus(applicationId, jobId, newStatus) {
 
   if (error) {
     console.log("Error updating status:", error.message);
-    throw new Error("Could not update application status");
+    throw new Error("Kunde inte uppdatera appens status");
   }
 
   createNotification({
     user_id: userId,
-    title: "Application update",
+    title: "Statusuppdatering",
     message: `Din ansökan till ${jobTitle} status uppdaterad till ${newStatus}`,
     type: "status",
     link: `/account/applications`,

@@ -1,15 +1,16 @@
-import { JobsListAdmin } from "app/_components/admin";
-import { JobFilters, Spinner } from "app/_components/shared";
-import { AddJobButton } from "app/_components/ui";
+import { JobsListAdmin } from "@/app/_components/admin";
+import { JobFilters, Spinner } from "@/app/_components/shared";
+import AddJobButton from "@/app/_components/ui/AddJobButton";
+
 import { Suspense } from "react";
 
 export default async function Page({ searchParams }) {
   const sParams = await searchParams;
 
   return (
-    <div className="max-w-6xl mx-auto  px-6 space-y-10">
+    <div className="max-w-6xl mx-auto   space-y-10">
       {/* 1. الهيدر مع زر الإضافة */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-4xl border border-gray-100 shadow-sm">
         <div className="space-y-2">
           <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter">
             Jobb <span className="text-[#2ecc91]">Annonser</span>
@@ -38,7 +39,7 @@ export default async function Page({ searchParams }) {
 
         <Suspense
           fallback={
-            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[2rem] border border-gray-100">
+            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-4xl border border-gray-100">
               <Spinner />
               <p className="mt-4 text-gray-400 font-medium">
                 Laddar annonser...
@@ -51,21 +52,6 @@ export default async function Page({ searchParams }) {
           </div>
         </Suspense>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, color, bgColor }) {
-  return (
-    <div className="bg-white p-6 rounded-4xl border border-gray-100 shadow-sm flex flex-col items-center text-center transition-all hover:shadow-md hover:-translate-y-1">
-      <div
-        className={`${bgColor} ${color} w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-2xl font-black`}
-      >
-        {value}
-      </div>
-      <span className="text-xs font-black uppercase tracking-widest text-gray-400">
-        {label}
-      </span>
     </div>
   );
 }

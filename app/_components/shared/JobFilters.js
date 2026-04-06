@@ -1,10 +1,11 @@
-import { ClearFilters, Filter } from "../ui";
+import ClearFilters from "../ui/ClearFilters";
+import Filter from "../ui/Filter";
 import SearchBar from "./SearchBar";
 
 // components/JobFilters.js
 export default function JobFilters() {
   return (
-    <div className="grid grid-cols-1 items-center  sm:grid-cols-2 lg:grid-cols-2 gap-4 bg-white/90 backdrop-blur-md p-4 sm:p-6 rounded-3xl shadow-lg border border-gray-100 w-full ">
+    <div className="grid grid-cols-1 items-center bg-white/90   sm:grid-cols-2 lg:grid-cols-2 gap-4  backdrop-blur-md p-4 sm:p-6 rounded-3xl shadow-lg border border-gray-100/50 w-full ">
       {/* 1. البحث النصي - جعلناه يأخذ سطر كامل في الموبايل فقط */}
       <div className="w-full">
         <SearchBar placeholder="Jobbtitel, företag eller annat sökord" />
@@ -114,7 +115,7 @@ export default function JobFilters() {
         ]}
       />
       <div>
-        <div className="pt-2 border-t border-gray-100/50 mt-2">
+        <div className="pt-2  border-gray-100/50 mt-2">
           <ClearFilters />
         </div>
       </div>

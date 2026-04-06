@@ -9,15 +9,14 @@ import {
 
 export default function HowItWorks() {
   return (
-    <section className="py-24 bg-gray-50/50">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-24 bg-white max-w-7xl mx-auto px-6">
+      <div className=" max-w-2xl mx-auto mb-16">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black text-[#2d2e3e] mb-4">
-            How it Works
+            Hur det fungerar
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-lg">
-            Your journey to a new career in Sweden, simplified into three easy
-            steps.
+            Din resa till en ny karriär, förenklad i tre enkla steg.
           </p>
         </div>
 
@@ -25,7 +24,7 @@ export default function HowItWorks() {
           <div className="space-y-10">
             <h3 className="text-2xl font-bold text-[#2ecc91] flex items-center gap-3">
               <span className="bg-[#2ecc91]/10 px-4 py-1 rounded-full text-sm uppercase tracking-widest">
-                For Candidates
+                För kandidater
               </span>
             </h3>
 
@@ -38,11 +37,12 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Create Account
+                    Skapa konto
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    Sign up in seconds and build your professional profile to
-                    get noticed by top Swedish firms.
+                    Registrera dig på några sekunder och bygg upp din
+                    professionella profil för att bli uppmärksammad av
+                    toppföretag.
                   </p>
                 </div>
               </div>
@@ -53,11 +53,11 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Upload CV
+                    Ladda upp CV
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    Add your resume and portfolio. Our smart system will match
-                    you with roles that fit your skills.
+                    Lägg till ditt CV och din portfolio. Vårt smarta system
+                    matchar dig med roller som passar dina färdigheter.
                   </p>
                 </div>
               </div>
@@ -68,11 +68,11 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Apply & Get Hired
+                    Ansök och bli anställd
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    One-click apply to your favorite jobs and start your
-                    interview process directly with employers.
+                    Ansök till dina favoritjobb med ett enda klick och starta
+                    din intervjuprocess direkt med arbetsgivare.
                   </p>
                 </div>
               </div>
@@ -82,7 +82,7 @@ export default function HowItWorks() {
           <div className="space-y-10">
             <h3 className="text-2xl font-bold text-[#2d2e3e] flex items-center gap-3">
               <span className="bg-[#2d2e3e]/10 px-4 py-1 rounded-full text-sm uppercase tracking-widest text-[#2d2e3e]">
-                For Employers
+                För arbetsgivare
               </span>
             </h3>
 
@@ -95,11 +95,11 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Post a Job
+                    Lägg upp ett jobb
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    Fill in your job details and requirements to reach thousands
-                    of qualified talents in Sweden.
+                    Fyll i dina jobbuppgifter och krav för att nå tusentals
+                    kvalificerade talanger i Sverige.
                   </p>
                 </div>
               </div>
@@ -110,11 +110,11 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Review Talent
+                    Recensera talang
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    Browse through top-tier candidates and use our dashboard to
-                    manage applications efficiently.
+                    Bläddra bland toppkandidater och använd vår instrumentpanel
+                    för att hantera ansökningar effektivt.
                   </p>
                 </div>
               </div>
@@ -125,11 +125,11 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-[#2d2e3e] mb-1">
-                    Start Hiring
+                    Börja anställa
                   </h4>
                   <p className="text-gray-500 text-sm">
-                    Connect with the best matches and build your dream team with
-                    ease.
+                    Få kontakt med de bästa matcherna och bygg ditt drömlag med
+                    lätthet.
                   </p>
                 </div>
               </div>

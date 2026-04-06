@@ -11,12 +11,12 @@ import {
 } from "@heroicons/react/24/solid";
 
 import { getServerSession } from "next-auth";
-
 import Link from "next/link";
 import Image from "next/image";
 import ApplyJob from "./ApplyJob";
-import { TextExpander } from "../ui";
+
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import TextExpander from "../ui/TextExpender";
 
 export default async function Job({ job }) {
   const session = await getServerSession(authConfig);
@@ -38,106 +38,153 @@ export default async function Job({ job }) {
   } = job;
 
   return (
-    <div className=" min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          <div className="flex-1 w-full">
-            <div className="border-b border-gray-100 pb-8">
-              <div className="flex mb-4">
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+    <div className="min-h-screen bg-white py-8 md:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col gap-10">
+          {/* Header Section */}
+          <div className="border-b border-gray-100 pb-10">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              {image_url && (
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-gray-50 rounded-2xl border border-gray-100 p-2">
                   <Image
                     src={image_url || "/api/placeholder/500/500"}
                     alt={company}
                     fill
-                    className="rounded-lg object-contain p-1"
+                    className="rounded-xl object-contain"
                   />
                 </div>
-              </div>
-              <div className="flex flex-col md:flex-row md:items-center  gap-6">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                    {title}
-                  </h1>
-                  <p className="mt-4 flex items-center gap-2 text-xl font-semibold text-gray-600">
-                    <BuildingOffice2Icon className="h-6 w-6 text-primary-500" />
+              )}
+
+              <div className="flex-1">
+                <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                  {title}
+                </h1>
+
+                <div className="mt-4 flex flex-wrap items-center gap-y-2 gap-x-6">
+                  <p className="flex items-center gap-2 text-lg font-bold text-[#2ecc91]">
+                    <BuildingOffice2Icon className="h-5 w-5" />
                     {company}
                   </p>
-                  <span className="flex items-center gap-1 mt-3">
-                    Posted on:
-                    <CalendarIcon className="h-5 w-5 text-primary-500" />
-                    {new Date(created_at).toLocaleDateString("en-US")}
+                  <span className="flex items-center gap-1.5 text-gray-500 text-sm font-medium">
+                    <CalendarIcon className="h-4 w-4" />
+                    Publicerad:{" "}
+                    {new Date(created_at).toLocaleDateString("sv-SE")}
                   </span>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-5 py-2 rounded-full text-sm font-medium text-gray-600">
-                  <FolderIcon className="h-5 w-5 text-primary-500" />
-                  {category}
-                </span>
-                <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-5 py-2 rounded-full text-sm font-medium text-gray-600">
-                  <MapPinIcon className="h-5 w-5 text-primary-500" />
-                  {location}
-                </span>
-                <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-5 py-2 rounded-full text-sm font-medium text-gray-600">
-                  <ClockIcon className="h-5 w-5 text-primary-500" />
-                  {employmentType}
-                </span>
-                <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-5 py-2 rounded-full text-sm font-medium text-gray-600">
-                  <CalendarDateRangeIcon className="h-5 w-5 text-primary-500" />
-                  {duration}
-                </span>
-                <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-5 py-2 rounded-full text-sm font-medium text-gray-600">
-                  <CurrencyDollarIcon className="h-5 w-5 text-blue-500" />
-                  {salary}
-                </span>
-              </div>
+            {/* Quick Info Tags */}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <InfoTag
+                icon={<FolderIcon />}
+                text={category}
+                color="text-blue-500"
+              />
+              <InfoTag
+                icon={<MapPinIcon />}
+                text={location}
+                color="text-red-500"
+              />
+              <InfoTag
+                icon={<ClockIcon />}
+                text={employmentType}
+                color="text-[#2ecc91]"
+              />
+              <InfoTag
+                icon={<CalendarDateRangeIcon />}
+                text={duration}
+                color="text-purple-500"
+              />
+              <InfoTag
+                icon={<CurrencyDollarIcon />}
+                text={salary}
+                color="text-amber-600"
+              />
             </div>
           </div>
 
-          <div className="">
-            <h3 className="flex items-center gap-2 text-2xl font-bold text-gray-900 mb-6">
-              <DocumentTextIcon className="h-6 w-6 text-primary-500" />
-              About this role
-            </h3>
-            <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50/50 p-8 rounded-3xl border border-dashed border-gray-200">
-              {description ? (
-                <TextExpander>{description}</TextExpander>
-              ) : (
-                <p className="text-gray-400 italic">No description provided.</p>
-              )}
-              <div>
-                <div>
-                  <span className="flex items-center mt-4 gap-1 text-gray-600">
-                    <MapPinIcon className="h-5 w-5 text-primary-500" />
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Description Column */}
+            <div className="lg:col-span-2">
+              <h3 className="flex items-center gap-2 text-2xl font-bold text-gray-900 mb-6">
+                <DocumentTextIcon className="h-6 w-6 text-[#2ecc91]" />
+                Om tjänsten
+              </h3>
 
-                    {address}
-                  </span>
-                </div>
-                <div>
-                  <span className="flex items-center mt-4 gap-1 text-secondery-50">
-                    Application deadline
-                    <CalendarDaysIcon className="h-5 w-5 text-secondery-50" />
-                    {new Date(application_deadline).toLocaleDateString("en-US")}
-                  </span>
-                </div>
+              <div className="w-full text-gray-700 leading-relaxed bg-gray-50/50 p-6 md:p-10 rounded-[2.5rem] border border-gray-100 whitespace-pre-wrap wrap-break-word">
+                {/* تأكد من عدم وجود مسافات كبيرة هنا */}
+                {description ? (
+                  <TextExpander>{description}</TextExpander>
+                ) : (
+                  <p className="text-gray-400 italic font-medium">
+                    Ingen beskrivning tillgänglig.
+                  </p>
+                )}
               </div>
             </div>
-            <div className="flex my-3">
-              {!session ? (
-                <Link
-                  href="/login"
-                  className="bg-primary-400 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-primary-600 transition-all shadow-lg mx-auto cursor-pointer  "
-                >
-                  Login to apply
-                </Link>
-              ) : (
-                <ApplyJob jobId={id} createdBy={created_by} />
-              )}
+
+            {/* Sidebar Details */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 bg-white border border-gray-100 rounded-4xl p-8 shadow-sm">
+                <h4 className="text-lg font-bold text-gray-900 mb-6 border-b pb-4">
+                  Information
+                </h4>
+
+                <div className="space-y-6">
+                  <div className="flex items-start gap-3">
+                    <MapPinIcon className="h-6 w-6 text-[#2ecc91] shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Adress</p>
+                      <p className="text-gray-600 text-sm">{address}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <CalendarDaysIcon className="h-6 w-6 text-orange-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        Sista ansökningsdag
+                      </p>
+                      <p className="text-orange-600 text-sm font-bold">
+                        {new Date(application_deadline).toLocaleDateString(
+                          "sv-SE",
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10">
+                  {!session ? (
+                    <Link
+                      href="/login"
+                      className="block w-full bg-gray-900 text-white text-center py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-md"
+                    >
+                      Logga in för att ansöka
+                    </Link>
+                  ) : (
+                    <ApplyJob jobId={id} createdBy={created_by} />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// مكوّن فرعي للأوسمة لتقليل تكرار الكود
+// مكوّن فرعي للأوسمة - بسيط وسريع
+function InfoTag({ icon, text, color }) {
+  return (
+    <span className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-white transition-colors">
+      {/* هنا نمرر الأيقونة مباشرة داخل الـ span مع اللون */}
+      <span className={color}>{icon}</span>
+      {text}
+    </span>
   );
 }

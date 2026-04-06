@@ -1,0 +1,155 @@
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import {
+  BuildingOffice2Icon,
+  CalendarDateRangeIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  FolderIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/solid";
+import { getServerSession } from "next-auth";
+import Image from "next/image";
+import Link from "next/link";
+import SaveJobButton from "./SaveJobButton";
+import getSavedJob from "@/app/_lib/data-service";
+
+export default async function SavedJobsCard({ job }) {
+  const session = await getServerSession(authConfig);
+  const userId = session?.user?.id;
+  if (!job) return null;
+
+  let isInitialSaved = false;
+
+  console.log(job);
+
+  const {
+    id,
+    created_at,
+    user_id,
+    job_id,
+    jobs: {
+      id: jobId,
+      title,
+      salary,
+      company,
+      category,
+      duration,
+      location,
+      image_url,
+      created_at: postedOn,
+      image_path,
+      employmentType,
+      application_deadline,
+    },
+  } = job;
+
+  const savedJobs = await getSavedJob(userId);
+  const allSavedJobsIds = savedJobs.map((s) => s.job_id) || [];
+
+  isInitialSaved = allSavedJobsIds.includes(jobId);
+
+  return (
+    <div className="group relative rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#2ecc91]/30">
+      {/* 1. Top Section: Logo & Titles */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex gap-4">
+          {/* Logo Container */}
+          {image_url ? (
+            <div className="h-14 w-14 rounded-2xl border border-gray-100 p-2 flex items-center justify-center bg-gray-50 group-hover:bg-white transition-colors shadow-sm">
+              <Image
+                src={image_url}
+                alt={company}
+                width={58}
+                height={58}
+                className="object-contain max-h-full"
+              />
+            </div>
+          ) : (
+            <div className="h-14 w-14 rounded-2xl bg-[#2ecc91]/10 flex items-center justify-center">
+              <BuildingOffice2Icon className="h-7 w-7 text-[#2ecc91]" />
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-xl font-bold text-[#2d2e3e] group-hover:text-[#2ecc91] transition-colors leading-tight flex items-center gap-2">
+              {title}
+            </h3>
+            <p className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mt-1 uppercase tracking-wider">
+              <BuildingOffice2Icon className="h-3.5 w-3.5" />
+              {company}
+            </p>
+          </div>
+        </div>
+        {session?.user && (
+          <div className="absolute right-6 flex items-center gap-2.5">
+            <p className="text-gray-500 text-sm">
+              {new Date(created_at).toLocaleDateString("en-GB")}
+            </p>
+            <SaveJobButton jobId={jobId} initialSaved={isInitialSaved} />
+          </div>
+        )}
+      </div>
+
+      {/* 2. Middle Section: Tags (نفس التنسيق الدائري الأنيق) */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Tag icon={<FolderIcon className="h-3.5 w-3.5" />} text={category} />
+        <MapPinTag
+          icon={<MapPinIcon className="h-3.5 w-3.5" />}
+          text={location}
+        />
+        <Tag
+          icon={<ClockIcon className="h-3.5 w-3.5" />}
+          text={employmentType}
+        />
+        <Tag
+          icon={<CalendarDateRangeIcon className="h-3.5 w-3.5" />}
+          text={duration}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 text-xs font-semibold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg">
+        <CalendarDaysIcon className="h-4 w-4" />
+        <span>
+          Sista ansökan:{" "}
+          {new Date(application_deadline).toLocaleDateString("en-GB")}
+        </span>
+      </div>
+
+      {/* 3. Bottom Section: Action Link */}
+      <div className="pt-4 border-t border-gray-50 flex justify-end items-center">
+        <Link
+          href={`/jobs/${jobId}`}
+          className="flex items-center gap-1 text-sm font-extrabold text-[#2d2e3e] hover:text-[#2ecc91] transition-all group-hover:gap-2"
+        >
+          Visa mer
+          <ChevronRightIcon className="h-4 w-4" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// مكون فرعي للـ Tags للحفاظ على نظافة الكود وتوحيد التصميم
+function Tag({ icon, text }) {
+  if (!text) return null;
+  return (
+    <span className="flex items-center gap-1.5 bg-gray-50 text-gray-600 px-3 py-1.5 rounded-xl text-[12px] font-bold border border-transparent group-hover:border-gray-100 transition-all shadow-sm">
+      <span className="text-gray-400 group-hover:text-[#2ecc91] transition-colors">
+        {icon}
+      </span>
+      {text}
+    </span>
+  );
+}
+
+// مخصص للمكان بلون أخضر خفيف للتميز
+function MapPinTag({ icon, text }) {
+  if (!text) return null;
+  return (
+    <span className="flex items-center gap-1.5 bg-[#2ecc91]/5 text-[#2ecc91] px-3 py-1.5 rounded-xl text-[12px] font-bold border border-[#2ecc91]/10 shadow-sm">
+      {icon}
+      {text}
+    </span>
+  );
+}

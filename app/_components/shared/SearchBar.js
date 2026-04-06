@@ -22,8 +22,8 @@ export default function SearchBar({
   return (
     <div className="flex flex-col  sm:flex-row  sm:items-center gap-3">
       {/* العنوان مع الأيقونة فوق الـ Input */}
-      <label className="flex items-center gap-2  font-black  text-xs uppercase text-gray-400 tracking-widest ml-1 group-focus-within:text-[#2ecc91] transition-colors">
-        <MagnifyingGlassIcon className="h-3.5 w-3.5 stroke-[3px]" />
+      <label className="flex items-center gap-2  font-black  text-sm uppercase text-gray-600 tracking-widest ml-1 group-focus-within:text-[#2ecc91] transition-colors">
+        <MagnifyingGlassIcon className="h-4 w-4 stroke-[3px]" />
         SÖKORD
       </label>
 

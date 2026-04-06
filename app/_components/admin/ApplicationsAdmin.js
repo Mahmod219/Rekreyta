@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import ApplicationStatus from "./ApplicationStatus";
 import { Modal } from "../shared";
-import { updateApplicationStatus } from "app/_lib/actions";
+import { updateApplicationStatus } from "@/app/_lib/actions";
 
 export default function ApplicationsAdmin({ application }) {
   const [isPending, startTransition] = useTransition();
@@ -145,7 +145,7 @@ export default function ApplicationsAdmin({ application }) {
                       <div className="flex items-center gap-3">
                         <LinkIcon className="h-6 w-6 text-blue-500" />
                         <span className="font-bold text-gray-700">
-                          Portfolio / Website
+                          Portfolio / Webbplats
                         </span>
                       </div>
                       <LinkIcon className="h-4 w-4 text-gray-400 group-hover/link:text-[#2ecc91]" />

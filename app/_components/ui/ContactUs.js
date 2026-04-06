@@ -11,11 +11,11 @@ export default function ContactUs() {
       {/* Header Section */}
       <section className="bg-[#2d2e3e] py-20 text-center px-6">
         <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
-          Get in <span className="text-[#2ecc91]">Touch</span>
+          Kontakta <span className="text-[#2ecc91]">Oss</span>
         </h1>
         <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-          Have a question about a job or want to partner with us? Our team is
-          here to help you navigate the Swedish job market.
+          Har du en fråga om ett jobb eller vill du samarbeta med oss? Vårt team
+          finns här för att hjälpa dig navigera på den svenska arbetsmarknaden.
         </p>
       </section>
 
@@ -31,7 +31,7 @@ export default function ContactUs() {
                     <EnvelopeIcon className="h-6 w-6 text-[#2ecc91]" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#2d2e3e]">Email Us</h4>
+                    <h4 className="font-bold text-[#2d2e3e]">Mejla oss</h4>
                     <p className="text-sm text-gray-500">
                       support@rekreyta.com
                     </p>
@@ -43,7 +43,7 @@ export default function ContactUs() {
                     <PhoneIcon className="h-6 w-6 text-[#2ecc91]" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#2d2e3e]">Call Us</h4>
+                    <h4 className="font-bold text-[#2d2e3e]">Telefon</h4>
                     <p className="text-sm text-gray-500">+46 70 000 00 00</p>
                   </div>
                 </div>
@@ -53,7 +53,7 @@ export default function ContactUs() {
                     <MapPinIcon className="h-6 w-6 text-[#2ecc91]" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#2d2e3e]">Visit Us</h4>
+                    <h4 className="font-bold text-[#2d2e3e]">Besöksadress</h4>
                     <p className="text-sm text-gray-500">Stockholm, Sweden</p>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ export default function ContactUs() {
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-600">
-                    Full Name
+                    Namn
                   </label>
                   <input
                     type="text"
@@ -92,7 +92,7 @@ export default function ContactUs() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-600">
-                    Email Address
+                    E-postadress
                   </label>
                   <input
                     type="email"
@@ -105,26 +105,26 @@ export default function ContactUs() {
                     Subject
                   </label>
                   <select className="w-full bg-gray-50 border border-gray-100 rounded-xl px-5 py-3 focus:outline-none focus:border-[#2ecc91] transition-colors appearance-none">
-                    <option>General Inquiry</option>
-                    <option>Job Support</option>
-                    <option>Partnership Request</option>
-                    <option>Technical Issue</option>
+                    <option>Allmän förfrågan</option>
+                    <option>Jobbstöd</option>
+                    <option>Partnerskapsbegäran</option>
+                    <option>Tekniskt problem</option>
                   </select>
                 </div>
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-bold text-gray-600">
-                    Message
+                    Meddelande
                   </label>
                   <textarea
                     rows="5"
-                    placeholder="How can we help you?"
+                    placeholder="Hur kan vi hjälpa dig?"
                     className="w-full bg-gray-50 border border-gray-100 rounded-xl px-5 py-3 focus:outline-none focus:border-[#2ecc91] transition-colors resize-none"
                   ></textarea>
                 </div>
                 <div className="md:col-span-2">
                   <button className="w-full md:w-auto bg-[#2ecc91] text-[#2d2e3e] px-12 py-4 rounded-xl font-bold text-lg hover:bg-[#2d2e3e] hover:text-white transition-all shadow-lg shadow-[#2ecc91]/20 active:scale-95 flex items-center justify-center gap-2">
                     <ChatBubbleBottomCenterTextIcon className="h-5 w-5" />
-                    Send Message
+                    Skicka meddelande
                   </button>
                 </div>
               </form>

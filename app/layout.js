@@ -1,10 +1,13 @@
-import { AuthProvider } from "./_components/SessionProvider";
 import { Inter } from "next/font/google";
 
 import "@/app/_styles/globals.css";
+
 import { Toaster } from "sonner";
-import { Footer, Header } from "./_components/ui";
+import { AuthProvider } from "./_components/SessionProvider";
+
 import CookieBanner from "./_components/CookieBanner";
+import Header from "./_components/ui/Header";
+import Footer from "./_components/ui/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +41,14 @@ export const metadata = {
     siteName: "Rekreyta",
     locale: "sv_SE", // مهم جداً لجوجل السويدي
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Rekreyta - Hitta jobb i Sverige",
+      },
+    ],
   },
 
   robots: {
@@ -65,19 +76,20 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="sv" className={inter.className}>
-      <body
-        className=" text-primary-800
-       bg-primary-50 min-h-screen flex flex-col antialiased relative scroll-smooth"
-      >
+      <body className="text-primary-800 bg-white bg-linear-to-b from-white via-gray-50/50 to-gray-100/30 min-h-screen flex flex-col antialiased relative scroll-smooth overflow-x-hidden">
         <AuthProvider>
           <Header />
-          <div className="flex-1  grid ">
-            <main className="max-w-7xl mx-auto w-full">
+
+          {/* أزلنا الـ grid هنا واستبدلناه بـ flex-1 بسيط */}
+          <div className="flex-1 w-full flex flex-col">
+            {/* الـ main يجب أن يكون w-full بدون max-w هنا، لأن الـ Hero يحتاج عرض الشاشة كاملاً */}
+            <main className="w-full relative">
               {children}
               <CookieBanner />
               <Toaster position="top-center" />
             </main>
           </div>
+
           <Footer />
         </AuthProvider>
       </body>

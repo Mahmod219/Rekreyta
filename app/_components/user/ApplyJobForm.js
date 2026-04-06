@@ -9,10 +9,10 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 
-import { applyToJobb, deleteFile } from "app/_lib/actions";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import PrivacyApply from "./PrivacyApply";
+import { applyToJobb, deleteFile } from "@/app/_lib/actions";
 
 export default function ApplyJobForm({ accountInfo, jobId }) {
   const [isDeleting, setIsDeleting] = useState({ cv: false, another: false });
@@ -61,22 +61,20 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
   };
   return (
     <form action={action}>
-      <div className="max-w-4xl mx-auto space-y-10 py-10 px-6">
+      <div className="max-w-4xl mx-auto space-y-10  ">
         <div className=" items-center bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <input type="hidden" name="jobId" value={jobId || ""} />
 
           <div className="flex items-center gap-3 border-b border-gray-50 pb-4 mb-6">
             <UserIcon className="h-6 w-6 text-primary-300" />
             <h3 className="text-xl font-bold text-[#2d2e3e]">
-              Personal Information
+              Personlig information
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-600">
-                First Name
-              </label>
+              <label className="text-sm font-bold text-gray-600">Förnamn</label>
               <input
                 name="firstname"
                 type="text"
@@ -92,7 +90,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-600">
-                Last Name
+                Efternamn
               </label>
               <input
                 name="lastname"
@@ -110,7 +108,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-600">
-                Email Address
+                E-postadress
               </label>
               <input
                 name="email"
@@ -122,7 +120,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-600">
-                Phone Number
+                Telefonnummer
               </label>
               <input
                 name="phone"
@@ -145,14 +143,14 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
           <div className="flex items-center gap-3 border-b border-gray-50 pb-4 mb-6">
             <MapPinIcon className="h-6 w-6 text-primary-300" />
             <h3 className="text-xl font-bold text-[#2d2e3e]">
-              Address Details
+              Adressuppgifter
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-2">
               <label className="text-sm font-bold text-gray-600">
-                Street Address
+                Gatuadress
               </label>
               <input
                 name="address"
@@ -169,7 +167,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-600">
-                Zip Code
+                Postnummer
               </label>
               <input
                 name="zipcode"
@@ -185,7 +183,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
               )}
             </div>
             <div className="md:col-span-3 space-y-2">
-              <label className="text-sm font-bold text-gray-600">City</label>
+              <label className="text-sm font-bold text-gray-600">Stad</label>
               <input
                 name="city"
                 type="text"
@@ -207,7 +205,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
           <div className="flex items-center gap-3 border-b border-gray-50 pb-4 mb-6">
             <DocumentArrowUpIcon className="h-6 w-6 text-primary-300" />
             <h3 className="text-xl font-bold text-[#2d2e3e]">
-              Documents & Portfolio
+              Dokument och portfölj
             </h3>
           </div>
 
@@ -216,7 +214,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-gray-600">
-                  Resume / CV (PDF)
+                  CV (PDF)
                 </label>
                 {cv_url && (
                   <div className="flex items-center gap-3">
@@ -225,7 +223,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                       target="_blank"
                       className="flex items-center gap-1 text-xs font-bold text-primary-300 hover:underline"
                     >
-                      <EyeIcon className="h-4 w-4" /> View
+                      <EyeIcon className="h-4 w-4" /> Se
                     </a>
                     <button
                       type="button"
@@ -234,7 +232,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                       className="flex items-center gap-1 text-xs font-bold text-red-400 hover:text-red-600 disabled:opacity-50"
                     >
                       <TrashIcon className="h-4 w-4" />{" "}
-                      {isDeleting.cv ? "..." : "Delete"}
+                      {isDeleting.cv ? "..." : "Radera"}
                     </button>
                   </div>
                 )}
@@ -264,7 +262,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-gray-600">
-                  Portfolio / Another
+                  Portfolio / Annan
                 </label>
                 {another_url && (
                   <div className="flex items-center gap-3">
@@ -273,7 +271,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                       target="_blank"
                       className="flex items-center gap-1 text-xs font-bold text-primary-300 hover:underline"
                     >
-                      <EyeIcon className="h-4 w-4" /> View
+                      <EyeIcon className="h-4 w-4" /> Se
                     </a>
                     <button
                       type="button"
@@ -282,7 +280,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                       className="flex items-center gap-1 text-xs font-bold text-red-400 hover:text-red-600 disabled:opacity-50"
                     >
                       <TrashIcon className="h-4 w-4" />{" "}
-                      {isDeleting.another ? "..." : "Delete"}
+                      {isDeleting.another ? "..." : "Radera"}
                     </button>
                   </div>
                 )}
@@ -309,15 +307,15 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             </div>
           </div>
 
-          <div className="space-y-2 mt-6">
+          <div className="space-y-2 mt-6 whitespace-pre-wrap wrap-break-word">
             <label className="text-sm font-bold text-gray-600">
-              Cover Letter
+              Personligt brev
             </label>
             <textarea
               name="coverletter"
               rows="4"
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all resize-none"
-              placeholder="Introduce yourself..."
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all resize-none wrap-break-word"
+              placeholder="Presentera dig själv..."
               defaultValue={coverletter}
             ></textarea>
             {state?.fieldErrors?.coverletter && (
@@ -332,7 +330,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
             disabled={isPending}
             className="bg-primary-400 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-primary-600 transition-all shadow-lg mx-auto cursor-pointer  "
           >
-            {isPending ? "applying..." : "Apply"}
+            {isPending ? "Ansöker..." : "Ansök"}
           </button>
         </div>
       </div>

@@ -14,7 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import MarkReadButton from "../_components/ui/MarkReadButton";
-import { RemoveNotifications } from "../_components/ui";
+import RemoveNotifications from "../_components/ui/RemoveNotifications";
 
 export default async function Page() {
   const session = await getServerSession(authConfig);

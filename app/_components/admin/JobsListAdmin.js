@@ -1,8 +1,8 @@
+import { getJobsAdmin } from "@/app/_lib/data-service";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
-import { getJobsAdmin } from "app/_lib/data-service";
 import { getServerSession } from "next-auth";
-import JobCardAdmin from "./JobCardAdmin";
 import StatCard from "../ui/StatCard";
+import JobCardAdmin from "./JobCardAdmin";
 
 export default async function JobsListAdmin({ searchParams }) {
   const session = await getServerSession(authConfig);
@@ -47,34 +47,36 @@ export default async function JobsListAdmin({ searchParams }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           label="Totala Jobb"
-          value={filteredJobs?.length}
+          value={filteredJobs?.length || 0}
           color="text-gray-600"
           bgColor="bg-gray-50"
         />
         <StatCard
           label="Aktiva"
-          value={publishedJobs.length}
+          value={publishedJobs?.length || 0}
           color="text-[#2ecc91]"
           bgColor="bg-[#2ecc91]/10"
         />
         <StatCard
           label="Utkast"
-          value={UnpublishedJobs.length}
+          value={UnpublishedJobs?.length || 0}
           color="text-orange-600"
           bgColor="bg-orange-50"
         />
         <StatCard
           label="Utgångna"
-          value={expiredCount}
+          value={expiredCount || 0}
           color="text-red-600"
           bgColor="bg-red-50"
         />
       </div>
 
       <div className="grid gap-3">
-        {filteredJobs.map((job) => (
-          <JobCardAdmin job={job} key={job.id} />
-        ))}
+        {filteredJobs && filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => <JobCardAdmin job={job} key={job.id} />)
+        ) : (
+          <p className="text-gray-500 text-center py-8">Inga jobb hittades</p>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { getJobsAdmin } from "app/_lib/data-service";
+import { getJobsAdmin } from "@/app/_lib/data-service";
 import JobCardApplicationAdmin from "./JobCardApplicationAdmin";
 
 export default async function JobListApplicatinAdmin({ searchParams }) {
@@ -7,8 +7,6 @@ export default async function JobListApplicatinAdmin({ searchParams }) {
   const sortBy = sParams?.sortBy || "newst";
 
   const jobs = (await getJobsAdmin()) || [];
-
-  console.log(jobs);
 
   const filteredJobs = jobs.filter((job) => {
     const serchTerm = query.toLowerCase();

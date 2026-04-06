@@ -20,7 +20,7 @@ export default function Filter({ filterField, options, label = "Filter by" }) {
   return (
     <div className="flex flex-col  sm:flex-row sm:items-center gap-3">
       {/* نص جانبي توضيحي */}
-      <label className="text-xs font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+      <label className="text-sm font-black uppercase text-gray-600 tracking-widest flex items-center gap-2">
         <FunnelIcon className="h-3.5 w-3.5" />
         {label}
       </label>
@@ -28,7 +28,7 @@ export default function Filter({ filterField, options, label = "Filter by" }) {
       <div className="relative group min-w-45 flex-1">
         {/* أيقونة السهم المخصصة */}
         <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400 group-hover:text-[#2ecc91] transition-colors">
-          <ChevronDownIcon className="h-4 w-4 stroke-[3px]" />
+          <ChevronDownIcon className="h-5 w-5 stroke-[3px]" />
         </div>
 
         <select

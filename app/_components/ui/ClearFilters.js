@@ -17,7 +17,7 @@ export default function ClearFilters() {
       className="flex items-center gap-2 text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
     >
       <XMarkIcon className="h-4 w-4" />
-      Clear All Filters
+      Rensa alla filter
     </button>
   );
 }

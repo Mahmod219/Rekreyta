@@ -1,4 +1,4 @@
-import { SideNavAdmin } from "app/_components/admin";
+import { SideNavAdmin } from "../_components/admin";
 
 export default function AdminLayout({ children }) {
   return (
@@ -14,7 +14,7 @@ export default function AdminLayout({ children }) {
           <SideNavAdmin />
         </aside>
 
-        <main className="bg-gray-50/50 rounded-3xl p-2 lg:p-0">{children}</main>
+        <main className=" rounded-3xl p-2 lg:p-0">{children}</main>
       </div>
     </div>
   );

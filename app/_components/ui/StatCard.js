@@ -4,7 +4,7 @@ export default function StatCard({ label, value, color, bgColor }) {
       <div
         className={`${bgColor} ${color} w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-2xl font-black`}
       >
-        {value}
+        {value || 0}
       </div>
       <span className="text-xs font-black uppercase tracking-widest text-gray-400">
         {label}

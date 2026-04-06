@@ -20,7 +20,7 @@ export default function SortByAdmin() {
   }
   return (
     <div className="flex flex-col flex-1 sm:flex-row sm:items-center gap-3">
-      <span className="flex items-center gap-2  font-black  text-xs uppercase text-gray-400 tracking-widest ml-1 group-focus-within:text-[#2ecc91] transition-colors">
+      <span className="flex items-center gap-2  font-black  text-sm uppercase text-gray-600 tracking-widest ml-1 group-focus-within:text-[#2ecc91] transition-colors">
         <AdjustmentsHorizontalIcon className="h-3.5 w-3.5 stroke-[3px]" />
         Sortera
       </span>

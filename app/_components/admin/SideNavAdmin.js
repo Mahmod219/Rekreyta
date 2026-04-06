@@ -11,17 +11,17 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   {
-    name: "Dashboard",
+    name: "Översikt",
     href: "/admin/dashboard",
     icon: <AdjustmentsHorizontalIcon className="h-5 w-5" />,
   },
   {
-    name: "Job offers",
+    name: "Lediga jobb",
     href: "/admin/joboffers",
     icon: <BriefcaseIcon className="h-5 w-5" />,
   },
   {
-    name: "Applications",
+    name: "Ansökningar",
     href: "/admin/applications",
     icon: <DocumentDuplicateIcon className="h-5 w-5" />,
   },

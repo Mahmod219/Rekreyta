@@ -5,25 +5,25 @@ export default function Statistics() {
         <div>
           <p className="text-[#2ecc91] text-4xl font-black mb-2">1,250</p>
           <p className="text-gray-400 text-sm uppercase tracking-widest">
-            Jobs Posted
+            Utlysta jobb
           </p>
         </div>
         <div>
           <p className="text-[#2ecc91] text-4xl font-black mb-2">450</p>
           <p className="text-gray-400 text-sm uppercase tracking-widest">
-            Companies
+            Företag
           </p>
         </div>
         <div>
           <p className="text-[#2ecc91] text-4xl font-black mb-2">15k</p>
           <p className="text-gray-400 text-sm uppercase tracking-widest">
-            Candidates
+            Kandidater
           </p>
         </div>
         <div>
           <p className="text-[#2ecc91] text-4xl font-black mb-2">85%</p>
           <p className="text-gray-400 text-sm uppercase tracking-widest">
-            Match Rate
+            Matchningsfrekvens
           </p>
         </div>
       </div>

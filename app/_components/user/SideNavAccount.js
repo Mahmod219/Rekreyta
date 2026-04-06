@@ -1,21 +1,29 @@
 "use client";
-import { DocumentDuplicateIcon, UserIcon } from "@heroicons/react/24/outline";
+import {
+  BookmarkIcon,
+  DocumentDuplicateIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 import { BriefcaseIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
   {
-    name: "Profile",
+    name: "Profil",
     href: "/account/info",
     icon: <UserIcon className="h-5 w-5" />,
   },
   {
-    name: "Applications",
+    name: "Ansökningar",
     href: "/account/applications",
     icon: <DocumentDuplicateIcon className="h-5 w-5" />,
   },
-  { name: "Jobs", href: "/jobs", icon: <BriefcaseIcon className="h-5 w-5" /> },
+  {
+    name: "Sparade Jobb",
+    href: "/account/savedjobs",
+    icon: <BookmarkIcon className="h-5 w-5" />,
+  },
 ];
 
 export default function SideNavAccount() {

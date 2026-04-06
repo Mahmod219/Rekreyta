@@ -1,4 +1,4 @@
-import { getUserAppliedJobs } from "app/_lib/data-service";
+import { getUserAppliedJobs } from "@/app/_lib/data-service";
 import UserApplicationCard from "./UserApplicationCard";
 
 export default async function UserApplicationsList({ application }) {
@@ -6,7 +6,9 @@ export default async function UserApplicationsList({ application }) {
   const appliedJobs = await getUserAppliedJobs(job_id);
   if (!appliedJobs.length)
     return (
-      <div className="text-center py-10 text-gray-500">No applications yet</div>
+      <div className="text-center py-10 text-gray-500">
+        Inga ansökningar ännu
+      </div>
     );
 
   return (

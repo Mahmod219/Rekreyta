@@ -1,5 +1,5 @@
 import { getJobsAdmin } from "../_lib/data-service";
-import JobCardAdmin from "./JobCardAdmin";
+import { JobCardAdmin } from "./admin";
 
 export default async function JobsListAdmin({ searchParams }) {
   const sParams = await searchParams;

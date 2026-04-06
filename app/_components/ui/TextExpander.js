@@ -2,23 +2,30 @@
 
 import { useState } from "react";
 
-function TextExpander({ children }) {
+export default function TextExpander({ children }) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!children) return null;
+
+  // تقسيم النص لكلمات
+  const words = children.split(/\s+/);
+  const isLong = words.length > 30;
+
+  if (!isLong) return <span>{children}</span>;
+
   const displayText = isExpanded
     ? children
-    : children.split(" ").slice(0, 100).join(" ") + "...";
+    : words.slice(0, 30).join(" ") + "...";
 
   return (
     <span>
-      {displayText}{" "}
+      {displayText}
       <button
-        className="text-primary-700 border-b border-primary-700 leading-3 pb-1 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
+        className="ml-2 text-[#2ecc91] font-bold hover:underline cursor-pointer inline-block"
       >
-        {isExpanded ? "Show less" : "Show more"}
+        {isExpanded ? "Visa mindre" : "Visa mer"}
       </button>
     </span>
   );
 }
-
-export default TextExpander;

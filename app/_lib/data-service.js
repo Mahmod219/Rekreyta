@@ -81,9 +81,8 @@ export async function createJob(data) {
 }
 
 export async function deleteJobById(id) {
-  const session = await getServerSession(authConfig);
-  const supabaseAuth = getSupabaseWithAuth(session);
-  const { data, error } = await supabaseAuth
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
     .from("jobs")
     .delete()
     .eq("id", id)
@@ -131,15 +130,13 @@ export async function createProfile(data) {
 
 // في ملف data-service.js
 
-export async function getAccountInfo() {
-  const session = await getServerSession(authConfig);
+export async function getAccountInfo(id) {
+  const supabaseAdmin = getSupabaseAdmin();
 
-  const supabase = getSupabaseWithAuth(session);
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("*")
-    .eq("id", session.user.id)
+    .eq("id", id)
     .maybeSingle();
 
   if (error) {
@@ -151,11 +148,26 @@ export async function getAccountInfo() {
 }
 
 export async function getUserApplications(id) {
-  const session = await getServerSession(authConfig);
-  const supabaseAuth = getSupabaseWithAuth(session);
-  const { data, error } = await supabaseAuth
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
     .from("applications")
     .select("*")
+    .eq("user_id", id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.log(error.message);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function getUserLatestApplications(id) {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("applications")
+    .select(`id, created_at, status, jobs(id, title, company)`)
     .eq("user_id", id)
     .order("created_at", { ascending: false });
 
@@ -254,5 +266,20 @@ export async function getNotifications(userId) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
+  return data;
+}
+
+export default async function getSavedJob(userId) {
+  const { data, error } = await supabase
+    .from("savedJobs")
+    .select(
+      `*, jobs(id, created_at, title,location, company, company, employmentType, salary, duration, category,application_deadline,image_url,image_path)`,
+    )
+    .eq("user_id", userId);
+
+  if (error) {
+    console.log(error.message);
+    return [];
+  }
   return data;
 }

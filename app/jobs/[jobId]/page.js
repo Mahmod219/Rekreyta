@@ -1,5 +1,5 @@
+import { Job } from "@/app/_components/user";
 import { getJob } from "@/app/_lib/data-service";
-import { Job } from "app/_components/user";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {

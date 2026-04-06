@@ -1,6 +1,6 @@
+import { CreateProfileForm } from "@/app/_components/user";
 import { getAccountInfo } from "@/app/_lib/data-service";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
-import { CreateProfileForm } from "app/_components/user";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 

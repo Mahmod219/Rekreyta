@@ -1,7 +1,8 @@
+import { ApplicationsAdmin } from "@/app/_components/admin";
 import { SearchBar } from "@/app/_components/shared";
+import Filter from "@/app/_components/ui/Filter";
+
 import { getApplicationsByJob } from "@/app/_lib/data-service";
-import { ApplicationsAdmin } from "app/_components/admin";
-import { Filter } from "app/_components/ui";
 
 export default async function Page({ params, searchParams }) {
   const { jobId } = await params;
@@ -33,7 +34,7 @@ export default async function Page({ params, searchParams }) {
 
   return (
     // max-w-5xl ليعطي مساحة أكبر قليلاً للعرض إذا كان هناك جداول
-    <div className="max-w-5xl mx-auto px-6 space-y-10">
+    <div className="max-w-5xl mx-auto  space-y-10">
       {/* 1. رأس الصفحة - تحسين التباعد والخطوط */}
       <header className="space-y-3">
         <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter leading-tight">
@@ -51,7 +52,7 @@ export default async function Page({ params, searchParams }) {
 
       {/* 2. شريط الأدوات (Filter Tool) */}
       {/* جعلت الحاوية أنيقة وبسيطة بدون ألوان خلفية قوية لتبرز العناصر */}
-      <div className="flex flex-col flex-wrap lg:flex-row items-center gap-4 bg-white/80 backdrop-blur-md p-5 rounded-[2rem] shadow-md border border-gray-100">
+      <div className="flex flex-col flex-wrap lg:flex-row items-center gap-4 bg-white/80 backdrop-blur-md p-5 rounded-4xl shadow-md border border-gray-100">
         <div className="w-full lg:flex-2">
           <SearchBar placeholder="Sök namn eller email" />
         </div>

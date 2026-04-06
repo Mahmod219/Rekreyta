@@ -32,10 +32,11 @@ export default function MobileMenu({ navLinks, session }) {
               {link.label}
             </Link>
           ))}
-          <div className="flex gap-2 mt-50 items-center text-gray-600 font-medium text-xl   hover:text-[#2ecc91] ">
-            {session?.user?.id && <SignOutButton />}
-            <span>Logga ut</span>
-          </div>
+          {session?.user?.id && (
+            <div className="flex gap-2 mt-50 items-center text-gray-600 font-medium text-xl   hover:text-[#2ecc91] ">
+              <SignOutButton /> <span>Logga ut</span>
+            </div>
+          )}
         </div>
       )}
     </div>

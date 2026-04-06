@@ -1,4 +1,4 @@
-import { SideNavAccount } from "app/_components/user";
+import { SideNavAccount } from "../_components/user";
 
 export default function Layout({ children }) {
   return (

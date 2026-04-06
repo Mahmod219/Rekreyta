@@ -17,8 +17,7 @@ export default function Footer() {
             className="brightness-200"
           />
           <p className="text-gray-400 text-sm leading-relaxed">
-            Connecting global talent with Sweden's most innovative companies.
-            Your future starts here.
+            Vi för samman talang och innovativa företag. Framtiden börjar här.
           </p>
         </div>
 
@@ -27,7 +26,7 @@ export default function Footer() {
           <ul className="space-y-4 text-sm text-gray-400">
             <li>
               <Link href="/jobs" className="hover:text-white transition-colors">
-                Find Jobs
+                Hitta jobb
               </Link>
             </li>
             <li>
@@ -35,7 +34,7 @@ export default function Footer() {
                 href="/about"
                 className="hover:text-white transition-colors"
               >
-                About Us
+                Om oss
               </Link>
             </li>
             <li>
@@ -43,7 +42,7 @@ export default function Footer() {
                 href="/#services"
                 className="hover:text-white transition-colors"
               >
-                Our Services
+                Våra tjänster
               </Link>
             </li>
             <li>
@@ -51,7 +50,7 @@ export default function Footer() {
                 href="/contact"
                 className="hover:text-white transition-colors"
               >
-                Contact Us
+                Kontakta oss
               </Link>
             </li>
           </ul>
@@ -60,17 +59,17 @@ export default function Footer() {
         <div>
           <h4 className="text-lg font-bold mb-6 text-[#2ecc91]">Support</h4>
           <ul className="space-y-4 text-sm text-gray-400">
-            <li>
+            {/* <li>
               <Link href="/faq" className="hover:text-white transition-colors">
                 FAQs
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link
                 href="/privacy"
                 className="hover:text-white transition-colors"
               >
-                Privacy Policy
+                Integritetspolicy
               </Link>
             </li>
             <li>
@@ -78,7 +77,7 @@ export default function Footer() {
                 href="/terms"
                 className="hover:text-white transition-colors"
               >
-                Terms of Service
+                Användarvillkor
               </Link>
             </li>
           </ul>
@@ -86,15 +85,15 @@ export default function Footer() {
 
         <div>
           <h4 className="text-lg font-bold mb-6 text-[#2ecc91]">
-            Stay Updated
+            Håll dig uppdaterad
           </h4>
           <p className="text-sm text-gray-400 mb-4">
-            Subscribe to get the latest job alerts.
+            Prenumerera för att få de senaste jobbaviseringarna.
           </p>
           <div className="flex gap-2">
             <input
               type="email"
-              placeholder="Your email"
+              placeholder="Ditt email"
               className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm w-full focus:outline-none focus:border-[#2ecc91]"
             />
             <button className="bg-[#2ecc91] text-[#2d2e3e] px-4 py-2 rounded-lg font-bold text-sm hover:bg-white transition-colors">
@@ -105,7 +104,9 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-        <p>© {new Date().getFullYear()} Rekreyta. All rights reserved.</p>
+        <p>
+          © {new Date().getFullYear()} Rekreyta. Alla rättigheter förbehållna.
+        </p>
         <div className="flex gap-6">
           <span className="hover:text-white cursor-pointer">LinkedIn</span>
           <span className="hover:text-white cursor-pointer">Twitter</span>

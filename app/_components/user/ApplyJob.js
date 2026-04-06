@@ -1,8 +1,7 @@
-import { authConfig } from "app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
-
 import { getAccountInfo } from "@/app/_lib/data-service";
-import { ApplyJobButton } from "../ui";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import ApplyJobButton from "../ui/ApplyJobButton";
 
 export default async function ApplyJob({ jobId }) {
   const session = await getServerSession(authConfig);

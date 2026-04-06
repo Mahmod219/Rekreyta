@@ -43,12 +43,22 @@ Dropdown.Menu = function Menu({ children }) {
 };
 
 Dropdown.Item = function Item({ children, onClick }) {
+  const { setOpen } = useContext(DropdownContext);
+
   return (
-    <button
-      onClick={onClick}
-      className=" px-4 py-2 text-left w-full hover:bg-primary-100 cursor-pointer  "
+    <div
+      onClick={(e) => {
+        // إذا كان هناك onClick مررناه يدوياً نفذه وأغلق المنيو
+        if (onClick) {
+          onClick(e);
+          setOpen(false);
+        }
+        // ملاحظة: لا نضع setOpen(false) هنا بشكل إجباري
+        // لكي نسمح للمودال بالبقاء مفتوحاً
+      }}
+      className="px-4 py-2 text-left w-full hover:bg-gray-100 cursor-pointer transition-colors first:rounded-t-2xl last:rounded-b-2xl"
     >
       {children}
-    </button>
+    </div>
   );
 };

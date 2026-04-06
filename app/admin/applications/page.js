@@ -1,13 +1,13 @@
+import { JobListApplicatinAdmin } from "@/app/_components/admin";
 import SortByAdmin from "@/app/_components/admin/SortByAdmin";
 import { SearchBar } from "@/app/_components/shared";
-import { JobListApplicatinAdmin } from "app/_components/admin";
 
 export default async function Page({ searchParams }) {
   // ملاحظة: يفضل دائماً جعل الصفحة async لاستلام searchParams بشكل صحيح في Next.js 15
   const sParams = await searchParams;
 
   return (
-    <div className="max-w-5xl mx-auto  px-6 space-y-10">
+    <div className="max-w-5xl mx-auto   space-y-10">
       {/* 1. رأس الصفحة (Header) - بنفس نمط الصفحة السابقة */}
       <header className="space-y-3">
         <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter leading-tight">
@@ -20,7 +20,7 @@ export default async function Page({ searchParams }) {
       </header>
 
       {/* 2. شريط الأدوات (Search & Sort) - بتنسيق الـ Glassmorphism الموحد */}
-      <div className="flex flex-col lg:flex-row items-center gap-4 bg-white/80 backdrop-blur-md p-5 rounded-[2rem] shadow-md border border-gray-100">
+      <div className="flex flex-col lg:flex-row items-center gap-4 bg-white/80 backdrop-blur-md p-5 rounded-4xl shadow-md border border-gray-100">
         <div className="w-full lg:flex-2">
           <SearchBar placeholder="Sök på titel, företag eller stad..." />
         </div>

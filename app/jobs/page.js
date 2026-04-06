@@ -1,8 +1,9 @@
 import jobs from "@/public/jobs.jpg";
-import { JobFilters } from "app/_components/shared";
-import JobCard from "app/_components/user/JobCard";
-import { getJobs } from "app/_lib/data-service";
+
 import Image from "next/image";
+import { getJobs } from "../_lib/data-service";
+import { JobFilters } from "../_components/shared";
+import JobCard from "../_components/user/JobCard";
 
 export const metadata = {
   title: "Lediga Jobb",
@@ -34,8 +35,8 @@ export default async function JobsPage({ searchParams }) {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <section className="relative min-h-[80vh] lg:h-[70vh] w-full flex items-center  overflow-hidden">
+    <main className="min-h-screen ">
+      <section className="relative min-h-[80vh]  sm:min-h-[45vh] md:min-h-[45vh] lg:min-h-[50vh]  w-full flex items-center  overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
             src={jobs}
@@ -50,10 +51,9 @@ export default async function JobsPage({ searchParams }) {
 
         <div className="flex flex-col relative z-10 container mx-auto px-6">
           <div className="">
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-8">
-              YOUR PATH TO <br />
-              <span className="text-[#2ecc91]">THE DREAM JOB</span> <br />
-              IN SWEDEN
+            <h1 className="text-3xl md:text-6xl font-black text-white leading-tight mb-8">
+              TA STEGET MOT DITT <br />
+              <span className="text-[#2ecc91]">DRÖMJOBBET</span>
             </h1>
 
             <div className="  w-full space-y-4">
@@ -73,7 +73,7 @@ export default async function JobsPage({ searchParams }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1  gap-8">
           {filteredJobs.map((job) => (
             <JobCard job={job} key={job.id} />
           ))}

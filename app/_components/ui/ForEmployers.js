@@ -15,22 +15,23 @@ export default function ForEmployers() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-6">
-                Hire the Best{" "}
-                <span className="text-[#2ecc91]">Tech Talent</span> in Sweden
+                Bygg ditt team med rätt{" "}
+                <span className="text-[#2ecc91]">Teknisk talang</span> kompetens
               </h1>
               <p className="text-xl text-gray-300 mb-10 leading-relaxed">
-                Stop sifting through irrelevant CVs. Rekreyta connects you with
-                pre-vetted professionals ready to scale your business.
+                Sluta leta igenom irrelevanta CV:n. Rekreyta kopplar dig samman
+                med förhandsgodkända yrkesverksamma som är redo att skala upp
+                din verksamhet.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button className="bg-[#2ecc91] text-[#2d2e3e] px-10 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all shadow-lg shadow-[#2ecc91]/20">
-                  Post a Job Now
+                  Publicera jobb nu
                 </button>
                 <Link
                   href="/contact"
                   className="border-2 border-white/20 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all"
                 >
-                  Contact Sales
+                  Kontakta Oss
                 </Link>
               </div>
             </div>
@@ -57,28 +58,28 @@ export default function ForEmployers() {
       <section className="py-24 container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-sm font-bold text-[#2ecc91] uppercase tracking-[0.3em] mb-3">
-            Why Rekreyta
+            Varför Rekreyta
           </h2>
           <h3 className="text-4xl font-black text-[#2d2e3e]">
-            Recruitment Made Intelligent
+            Rekrytering gjord intelligent
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {[
             {
-              title: "Pre-Vetted Talent",
+              title: "Förhandsgranskad talang",
               desc: "Our AI-driven matching ensures you only see candidates that actually fit your tech stack.",
               icon: ShieldCheckIcon,
             },
             {
-              title: "Faster Hiring",
-              desc: "Reduce your Time-to-Hire by 40%. Our streamlined dashboard keeps your pipeline organized.",
+              title: "Snabbare anställning",
+              desc: "Minska din anställningstid med 40 %. Vår effektiva instrumentpanel håller din pipeline organiserad.",
               icon: BoltIcon,
             },
             {
-              title: "Brand Visibility",
-              desc: "Get your company profile in front of 15,000+ active job seekers in Sweden.",
+              title: "Varumärkessynlighet",
+              desc: "Få din företagsprofil att synas för fler än 15 000 aktiva arbetssökande i Sverige.",
               icon: UserGroupIcon,
             },
           ].map((feature, i) => (
@@ -101,7 +102,7 @@ export default function ForEmployers() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-[#2d2e3e]">
-              Simple, Transparent Pricing
+              Enkel, transparent prissättning
             </h2>
           </div>
 
@@ -110,76 +111,74 @@ export default function ForEmployers() {
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
               <h4 className="text-xl font-bold text-[#2d2e3e] mb-2">Basic</h4>
               <p className="text-gray-400 text-sm mb-6">
-                Perfect for small startups
+                Perfekt för små startups
               </p>
               <div className="text-4xl font-black text-[#2d2e3e] mb-8">
-                Free{" "}
+                Gratis{" "}
                 <span className="text-sm font-normal text-gray-400">
-                  / 1 post
+                  / 1 inlägg
                 </span>
               </div>
               <ul className="space-y-4 mb-10 flex-1 text-gray-600">
                 <li className="flex items-center gap-2">
-                  <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" /> 30-day
-                  listing
+                  <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
+                  30-dagar listning
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
-                  Standard Support
+                  Standardstöd
                 </li>
               </ul>
               <button className="w-full py-4 border-2 border-[#2d2e3e] rounded-xl font-bold hover:bg-[#2d2e3e] hover:text-white transition-all">
-                Start for Free
+                Börja gratis
               </button>
             </div>
 
             {/* Plan 2 - Featured */}
             <div className="bg-white p-8 rounded-3xl border-2 border-[#2ecc91] shadow-xl relative scale-105 z-10 flex flex-col">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#2ecc91] text-[#2d2e3e] text-xs font-black px-4 py-1 rounded-full uppercase">
-                Most Popular
+                Mest populära
               </div>
               <h4 className="text-xl font-bold text-[#2d2e3e] mb-2">
-                Professional
+                Professionell
               </h4>
-              <p className="text-gray-400 text-sm mb-6">For growing teams</p>
+              <p className="text-gray-400 text-sm mb-6">För växande team</p>
               <div className="text-4xl font-black text-[#2d2e3e] mb-8">
                 $199{" "}
                 <span className="text-sm font-normal text-gray-400">
-                  / month
+                  / månad
                 </span>
               </div>
               <ul className="space-y-4 mb-10 flex-1 text-gray-600">
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
-                  Unlimited job posts
+                  Obegränsade jobbannonser
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" /> Utvalt
+                  märke
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
-                  Featured badge
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
-                  Candidate filtering
+                  Kandidatfiltrering
                 </li>
               </ul>
               <button className="w-full py-4 bg-[#2ecc91] text-[#2d2e3e] rounded-xl font-bold shadow-lg shadow-[#2ecc91]/20 hover:scale-105 transition-all">
-                Get Started
+                Kom igång
               </button>
             </div>
 
             {/* Plan 3 */}
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
-              <h4 className="text-xl font-bold text-[#2d2e3e] mb-2">
-                Enterprise
-              </h4>
-              <p className="text-gray-400 text-sm mb-6">Large organizations</p>
+              <h4 className="text-xl font-bold text-[#2d2e3e] mb-2">Företag</h4>
+              <p className="text-gray-400 text-sm mb-6">Stora organisationer</p>
               <div className="text-4xl font-black text-[#2d2e3e] mb-8">
-                Custom
+                Beställnings
               </div>
               <ul className="space-y-4 mb-10 flex-1 text-gray-600">
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" />{" "}
-                  Dedicated Manager
+                  Dedikerad chef
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" /> API
@@ -187,11 +186,11 @@ export default function ForEmployers() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon className="h-5 w-5 text-[#2ecc91]" /> Custom
-                  Analytics
+                  Analys
                 </li>
               </ul>
               <button className="w-full py-4 border-2 border-[#2d2e3e] rounded-xl font-bold hover:bg-[#2d2e3e] hover:text-white transition-all">
-                Contact Sales
+                kontakt oss
               </button>
             </div>
           </div>
@@ -202,14 +201,14 @@ export default function ForEmployers() {
       <section className="py-24 container mx-auto px-6 text-center">
         <div className="bg-[#2ecc91] p-12 md:p-20 rounded-[4rem] text-[#2d2e3e]">
           <h2 className="text-4xl md:text-6xl font-black mb-8">
-            Ready to grow your team?
+            Redo att utöka ditt team?
           </h2>
           <p className="text-xl mb-12 opacity-80 max-w-2xl mx-auto font-medium">
-            Join hundreds of Swedish companies that find their best hires
-            through Rekreyta.
+            Gå med hundratals svenska företag som hittar sina bästa medarbetare
+            genom Rekreyta.
           </p>
           <button className="bg-[#2d2e3e] text-white px-12 py-5 rounded-2xl font-black text-xl hover:scale-110 transition-transform">
-            Post Your First Job
+            Lägg upp ditt första jobb
           </button>
         </div>
       </section>

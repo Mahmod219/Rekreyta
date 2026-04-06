@@ -148,9 +148,7 @@ export default function NotificationsBell({ userId }) {
             ) : (
               <div className="p-10 text-center flex flex-col items-center gap-3">
                 <CheckCircleIcon className="h-12 w-12 text-gray-100" />
-                <p className="text-gray-400 font-bold text-sm">
-                  All caught up!
-                </p>
+                <p className="text-gray-400 font-bold text-sm">Allt ikapp!</p>
               </div>
             )}
           </div>

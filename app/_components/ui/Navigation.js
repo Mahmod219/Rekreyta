@@ -1,18 +1,19 @@
 "use client";
 import {
   BriefcaseIcon,
+  BuildingOfficeIcon,
+  HeartIcon,
   InformationCircleIcon,
   PhoneIcon,
   UserCircleIcon,
-  UserGroupIcon,
 } from "@heroicons/react/24/outline";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { SignOutButton } from "../shared/SignOutButton";
 import MobileMenu from "./MobileMenu";
-import { useSession } from "next-auth/react";
 import NotificationsBell from "./NotificationsBell";
 
-export default function Navigation() {
+export default function Navigation({ savedJobs }) {
   const { data: session } = useSession();
   const navLinks = [
     {
@@ -23,7 +24,7 @@ export default function Navigation() {
     {
       href: "/employers",
       label: "För företag",
-      icon: <UserGroupIcon className="h-6 w-6" />,
+      icon: <BuildingOfficeIcon className="h-6 w-6" />,
     },
     {
       href: "/contact",
@@ -58,8 +59,22 @@ export default function Navigation() {
       {/* 2. قسم المستخدم (يظهر دائماً في الـ Desktop والـ Mobile) */}
       <div className=" flex items-center">
         {session?.user ? (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <NotificationsBell userId={session.user.id ?? null} />
+
+            {savedJobs?.length > 0 && (
+              <Link
+                href="/account/savedjobs"
+                className="relative p-2 text-gray-500 hover:text-[#2ecc91] transition-colors"
+              >
+                <HeartIcon className="h-7 w-7 lg:h-8 lg:w-8" />
+                {/* دائرة صغيرة توضح العدد */}
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                  {savedJobs.length}
+                </span>
+              </Link>
+            )}
+
             <Link
               href="/account"
               className="flex items-center gap-2 bg-gray-50 p-1 lg:pr-4 rounded-full border border-gray-100 hover:shadow-sm transition-shadow"

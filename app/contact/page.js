@@ -1,4 +1,4 @@
-import { ContactUs } from "app/_components/ui";
+import ContactUs from "../_components/ui/ContactUs";
 
 export default function page() {
   return (

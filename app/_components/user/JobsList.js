@@ -4,7 +4,8 @@ import JobCard from "./JobCard";
 export default async function JobsList() {
   const jobs = await getJobs();
 
-  if (jobs.length === 0) return <p>Just know we have no job offers to you</p>;
+  if (jobs.length === 0)
+    return <p>Vet bara att vi inte har några jobberbjudanden till dig</p>;
 
   return (
     <div className="grid gap-3">

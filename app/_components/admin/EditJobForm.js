@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { updateJob } from "app/_lib/actions";
 
 import {
   BriefcaseIcon,
@@ -12,8 +11,10 @@ import {
   PhotoIcon,
 } from "@heroicons/react/24/outline";
 import { InputField } from "../shared";
-import { CustomSelect } from "../ui";
+
 import { CATEGORY_OPTIONS, JOB_TYPE_OPTIONS, LOCATION } from "../ui/constants";
+import { updateJob } from "@/app/_lib/actions";
+import CustomSelect from "../ui/CustomSelect";
 
 export default function EditJobForm({ jobOffer }) {
   const {
@@ -62,7 +63,7 @@ export default function EditJobForm({ jobOffer }) {
   return (
     <form
       action={formAction}
-      className="max-w-5xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100"
+      className="max-w-5xl mx-auto bg-white  rounded-[2.5rem]  "
     >
       <input type="hidden" name="jobofferId" value={id} />
 
@@ -70,7 +71,7 @@ export default function EditJobForm({ jobOffer }) {
         <div className="sm:col-span-2 flex flex-col gap-4 mb-4 p-6 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">
             <PhotoIcon className="h-4 w-4 stroke-[3px]" />
-            Job Image / Banner
+            Jobbbild / Banner
           </label>
 
           <div className="flex flex-col md:flex-row items-center gap-6">
@@ -92,20 +93,20 @@ export default function EditJobForm({ jobOffer }) {
         </div>
 
         <InputField
-          label="Job Title"
+          label="Jobbtitel"
           name="title"
           defaultValue={title}
           error={state?.fieldErrors?.title}
         />
         <InputField
-          label="Company Name"
+          label="Företagsnamn"
           name="company"
           defaultValue={company}
           error={state?.fieldErrors?.company}
         />
 
         <CustomSelect
-          label="Job Category"
+          label="Jobbkategori"
           name="category"
           icon={TagIcon}
           options={CATEGORY_OPTIONS}
@@ -113,7 +114,7 @@ export default function EditJobForm({ jobOffer }) {
           onChange={(val) => setFormData({ ...formData, category: val })}
         />
         <CustomSelect
-          label="Location"
+          label="Plats"
           name="location"
           icon={MapPinIcon}
           options={LOCATION}
@@ -122,7 +123,7 @@ export default function EditJobForm({ jobOffer }) {
         />
 
         <CustomSelect
-          label="Employment Type"
+          label="Anställningstyp"
           name="employmentType"
           icon={BriefcaseIcon}
           options={JOB_TYPE_OPTIONS}
@@ -130,20 +131,20 @@ export default function EditJobForm({ jobOffer }) {
           onChange={(val) => setFormData({ ...formData, employmentType: val })}
         />
         <InputField
-          label="Duration"
+          label="Varaktighet"
           name="duration"
           defaultValue={duration}
           error={state?.fieldErrors?.duration}
         />
 
         <InputField
-          label="Salary"
+          label="Lön"
           name="salary"
           defaultValue={salary}
           error={state?.fieldErrors?.salary}
         />
         <InputField
-          label="Application Deadline"
+          label="Sista ansökningsdag"
           name="application_deadline"
           type="date"
           defaultValue={application_deadline}
@@ -152,7 +153,7 @@ export default function EditJobForm({ jobOffer }) {
 
         <div className="md:col-span-2">
           <InputField
-            label="Full Address"
+            label="Fullständig adress"
             name="address"
             defaultValue={address}
             error={state?.fieldErrors?.address}
@@ -162,12 +163,12 @@ export default function EditJobForm({ jobOffer }) {
         <div className="md:col-span-2 flex flex-col gap-2">
           <label className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">
             <PencilSquareIcon className="h-3.5 w-3.5 stroke-[3px]" />
-            Description
+            Beskrivning
           </label>
           <textarea
             name="description"
             defaultValue={description ?? ""}
-            className="w-full min-h-50 px-6 py-4 bg-gray-50/50 border-2 border-transparent focus:border-[#2ecc91]/20 focus:bg-white rounded-2xl outline-none transition-all shadow-sm text-sm font-bold text-gray-700 placeholder:text-gray-300"
+            className="w-full wrap-break-word min-h-50 px-6 py-4 bg-gray-50/50 border-2 border-transparent focus:border-[#2ecc91]/20 focus:bg-white rounded-2xl outline-none transition-all shadow-sm text-sm font-bold text-gray-700 placeholder:text-gray-300"
           />
           {state?.fieldErrors?.description && (
             <p className="text-red-500 text-xs mt-1 ml-2">
@@ -180,16 +181,16 @@ export default function EditJobForm({ jobOffer }) {
       <div className="flex items-center justify-end gap-4 mt-12 pt-8 border-t border-gray-50">
         <button
           type="reset"
-          className=" cursor-pointer px-4 py-4 rounded-2xl font-bold text-gray-400 hover:text-gray-600 transition-all"
+          className=" cursor-pointer text-sm px-4 py-4 rounded-2xl font-bold text-gray-400 hover:text-gray-600 transition-all"
         >
-          Reset Changes
+          Återställ ändringar
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="cursor-pointer bg-[#2ecc91] hover:bg-[#2ecc91]/90 text-white px-4 py-4 rounded-2xl font-bold shadow-lg shadow-[#2ecc91]/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="cursor-pointer text-sm bg-[#2ecc91] hover:bg-[#2ecc91]/90 text-white px-4 py-4  rounded-2xl font-bold shadow-lg shadow-[#2ecc91]/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isPending ? "Updating..." : "Save Changes"}
+          {isPending ? "Uppdaterar..." : "Spara ändringar"}
         </button>
       </div>
     </form>
