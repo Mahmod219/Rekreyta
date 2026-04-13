@@ -10,10 +10,10 @@ export default async function Page({ searchParams }) {
     <div className="max-w-5xl mx-auto   space-y-10">
       {/* 1. رأس الصفحة (Header) - بنفس نمط الصفحة السابقة */}
       <header className="space-y-3">
-        <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter leading-tight">
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight uppercase">
           Hantera <span className="text-[#2ecc91]">Lediga Tjänster</span>
-        </h2>
-        <p className="text-gray-500 font-medium text-lg max-w-2xl leading-relaxed">
+        </h1>
+        <p className="text-gray-500 font-medium my-2">
           Översikt över alla publicerade jobb. Här kan du söka, sortera och se
           hur många som har ansökt till varje tjänst.
         </p>

@@ -24,7 +24,7 @@ export const getSupabaseAdmin = () => {
 };
 export function getSupabaseWithAuth(session) {
   if (!session?.supabaseAccessToken) {
-    return supabase; // العودة للعميل العادي إذا لم يوجد توكن
+    throw new Error("No Supabase access token");
   }
 
   return createClient(

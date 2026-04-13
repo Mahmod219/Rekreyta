@@ -9,7 +9,7 @@ import {
   Legend,
 } from "recharts";
 
-const COLORS = ["#f97316", "#2ecc91", "#EF4444", "#3498db"];
+const COLORS = ["#f97316", "#EF4444", "#3498db", "#2ecc91"];
 
 export default function ApplicationsPieChart({ data }) {
   // تصفية البيانات لإخفاء القيم الصفرية (اختياري، يجعل المخطط أجمل)
@@ -19,6 +19,7 @@ export default function ApplicationsPieChart({ data }) {
     <div className="w-full bg-white p-4 sm:p-6 rounded-[2.5rem] shadow-sm border border-gray-50 flex flex-col items-center">
       {/* الـ Height هنا يجب أن يكون ثابتاً في الحاوية ليتمكن ResponsiveContainer من ملئه */}
       <div className="w-full h-75 sm:h-87.5">
+        <h3 className="font-bold text-lg mb-4 text-center">Statusfördelning</h3>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -56,9 +57,9 @@ export default function ApplicationsPieChart({ data }) {
 
             <Legend
               verticalAlign="bottom"
-              height={36}
+              height={80}
               iconType="circle"
-              wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }}
+              wrapperStyle={{ paddingTop: "5px", fontSize: "12px" }}
             />
           </PieChart>
         </ResponsiveContainer>

@@ -115,7 +115,7 @@ export default async function page() {
     <div className="max-w-7xl mx-auto pb-10">
       {/* 🟢 Header Section */}
       <div className="mb-4">
-        <h2 className="font-black text-3xl text-gray-800">
+        <h2 className="font-black text-xl md:text-3xl text-gray-800">
           Välkommen, {firstName}! 👋
         </h2>
         <p className="text-gray-500 mt-1 mb-3">
@@ -172,10 +172,7 @@ export default async function page() {
           {/* 🟢 Profile Strength */}
 
           {/* 🟢 Pie Chart - نضعه هنا ليملأ الجانب */}
-          <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-50">
-            <h3 className="font-bold text-lg mb-4 text-center">
-              Statusfördelning
-            </h3>
+          <div>
             <ApplicationsPieChart data={pieData} />
           </div>
 

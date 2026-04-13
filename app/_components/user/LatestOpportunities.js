@@ -13,8 +13,8 @@ export default async function LatestOpportunities() {
         <div className="relative -translate-y-20 md:-translate-y-28 bg-white/90 backdrop-blur-2xl p-6 md:p-10 rounded-[2.5rem] border border-white shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
             <div>
-              <h2 className="text-3xl md:text-4xl font-black text-gray-800 ">
-                Senaste <span className="text-[#2ecc91]">möjligheter</span>
+              <h2 className="text-2xl md:text-4xl font-black text-gray-800 ">
+                SENASTE <span className="text-[#2ecc91]">MÖJLIGHETER</span>
               </h2>
               <p className="text-gray-500 font-medium mt-1">
                 Hitta ditt nästa drömjobb bland våra senaste annonser

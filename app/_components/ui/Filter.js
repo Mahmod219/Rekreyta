@@ -18,7 +18,7 @@ export default function Filter({ filterField, options, label = "Filter by" }) {
   }
 
   return (
-    <div className="flex flex-col  sm:flex-row sm:items-center gap-3">
+    <div className="flex flex-col sm:flex-row   gap-3">
       {/* نص جانبي توضيحي */}
       <label className="text-sm font-black uppercase text-gray-600 tracking-widest flex items-center gap-2">
         <FunnelIcon className="h-3.5 w-3.5" />

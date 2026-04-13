@@ -22,7 +22,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="text-lg font-bold mb-6 text-[#2ecc91]">Quick Links</h4>
+          <h4 className="text-lg font-bold mb-6 text-[#2ecc91]">Snabblänkar</h4>
           <ul className="space-y-4 text-sm text-gray-400">
             <li>
               <Link href="/jobs" className="hover:text-white transition-colors">

@@ -3,19 +3,46 @@
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
 
+import { addMinutes, formatISO } from "date-fns";
 import { revalidatePath } from "next/cache";
+
 import {
   createJob,
   createNotification,
   deleteJobById,
   publishJobById,
 } from "./data-service";
-import { applySchema } from "./schemas/applySchema";
 import { jobSchema } from "./schemas/jobSchema";
 import { profileSchema } from "./schemas/profileSchema";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
-import { title } from "node:process";
-import { success } from "zod";
+import { getMatchScoreFromAI } from "./ai-actions";
+import { redirect } from "next/navigation";
+
+// حل سحري لمشكلة DOMMatrix و Canvas في بيئة السيرفر
+if (typeof global.DOMMatrix === "undefined") {
+  global.DOMMatrix = class DOMMatrix {
+    constructor() {
+      this.m11 = 1;
+      this.m22 = 1;
+      this.m33 = 1;
+      this.m44 = 1;
+    }
+  };
+}
+if (typeof global.ImageData === "undefined") {
+  global.ImageData = class ImageData {
+    constructor() {
+      return {};
+    }
+  };
+}
+
+if (typeof global.Path2D === "undefined") {
+  global.Path2D = class Path2D {
+    constructor() {}
+    addPath() {}
+  };
+}
 
 export async function addJob(prevState, formData) {
   const session = await getServerSession(authConfig);
@@ -442,93 +469,155 @@ export async function deleteFile(fileType) {
 }
 
 export async function applyToJobb(prevState, formData) {
+  // 1. التحقق من الجلسة
   const session = await getServerSession(authConfig);
   if (!session) return { formError: "Du måste vara inloggad" };
 
   const userId = session.user.id;
-  const supabase = getSupabaseWithAuth(session);
+  const supabaseClient = getSupabaseWithAuth(session);
   const supabaseAdmin = getSupabaseAdmin();
 
-  // 1. استخراج البيانات من الفورم
+  // 2. استخراج البيانات من الفورم
   const jobId = formData.get("jobId");
   const firstName = formData.get("firstname");
   const lastName = formData.get("lastname");
   const coverLetter = formData.get("coverletter");
   const fullName = `${firstName} ${lastName}`;
 
-  // الملفات الجديدة من الـ input
   const newCvFile = formData.get("cv");
   const newAnotherFile = formData.get("another");
 
   try {
-    // 2. جلب بيانات البروفايل الحالية (للحصول على الروابط والمسارات القديمة)
+    // 3. جلب بيانات الوظيفة والبروفايل
+    const { data: jobData, error: jobError } = await supabaseAdmin
+      .from("jobs")
+      .select("title, description, created_by")
+      .eq("id", jobId)
+      .single();
+
+    if (jobError || !jobData)
+      throw new Error("Jobbinformationen kunde inte hämtas.");
+
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("cv_url, cv_path, another_url, another_path")
       .eq("id", userId)
       .single();
 
-    // 3. معالجة السيرة الذاتية (CV)
+    let matchScore = 0;
+    let aiAnalysis = "";
+    let resumeText = "";
+
+    // 4. استخراج النص من الـ PDF (الجديد أو القديم)
+    // 4. استخراج النص من الـ PDF باستخدام pdf2json
+    try {
+      const PDFParser = require("pdf2json");
+      const pdfParser = new PDFParser(null, 1); // الـ 1 تعني استخراج النص فقط
+
+      let pdfBuffer = null;
+      if (newCvFile && newCvFile.size > 0) {
+        pdfBuffer = Buffer.from(await newCvFile.arrayBuffer());
+      } else if (profile?.cv_url) {
+        const response = await fetch(profile.cv_url);
+        pdfBuffer = Buffer.from(await response.arrayBuffer());
+      }
+
+      if (pdfBuffer) {
+        // تحويل عملية الاستخراج لـ Promise عشان الـ await يشتغل صح
+        resumeText = await new Promise((resolve, reject) => {
+          pdfParser.on("pdfParser_dataError", (errData) =>
+            reject(errData.parserError),
+          );
+          pdfParser.on("pdfParser_dataReady", () => {
+            resolve(pdfParser.getRawTextContent()); // جلب النص الخام
+          });
+          pdfParser.parseBuffer(pdfBuffer);
+        });
+
+        console.log(resumeText);
+        console.log("--- ✅ النص استخرج بنجاح باستخدام pdf2json ---");
+      }
+
+      // 5. إرسال النص للـ AI
+      if (resumeText && resumeText.trim().length > 0) {
+        const aiResult = await getMatchScoreFromAI(
+          resumeText,
+          jobData.description,
+        );
+        matchScore = aiResult.score || 0;
+        aiAnalysis = aiResult.reason || "";
+        console.log(`--- AI SUCCESS --- Score: ${matchScore}%`);
+      }
+    } catch (pdfError) {
+      console.error("PDF/AI Logic Error:", pdfError);
+      aiAnalysis = "Kunde inte analysera CV pga tekniskt fel.";
+    }
+
+    // 6. معالجة رفع الملفات (CV)
     let finalCvUrl = profile?.cv_url;
     let finalCvPath = profile?.cv_path;
 
     if (newCvFile && newCvFile.size > 0) {
       const cvFileName = `${userId}/${Date.now()}-cv-${newCvFile.name}`;
-      const { error: cvError } = await supabaseAdmin.storage
+      const { error: cvUploadError } = await supabaseAdmin.storage
         .from("cv-files")
         .upload(cvFileName, newCvFile);
 
-      if (cvError) throw new Error(`CV Upload Error: ${cvError.message}`);
+      if (cvUploadError)
+        throw new Error(`CV Upload Error: ${cvUploadError.message}`);
 
       finalCvUrl = supabaseAdmin.storage
         .from("cv-files")
         .getPublicUrl(cvFileName).data.publicUrl;
-      finalCvPath = cvFileName; // تحديث المسار الجديد
+      finalCvPath = cvFileName;
     }
 
-    // 4. معالجة الملف الإضافي (Another/Portfolio)
+    // 7. معالجة رفع الملفات (Another/Portfolio)
     let finalAnotherUrl = profile?.another_url;
     let finalAnotherPath = profile?.another_path;
 
     if (newAnotherFile && newAnotherFile.size > 0) {
-      const clFileName = `${userId}/${Date.now()}-portfolio-${newAnotherFile.name}`;
-      const { error: clError } = await supabaseAdmin.storage
+      const anotherFileName = `${userId}/${Date.now()}-portfolio-${newAnotherFile.name}`;
+      const { error: anotherError } = await supabaseAdmin.storage
         .from("another-files")
-        .upload(clFileName, newAnotherFile);
+        .upload(anotherFileName, newAnotherFile);
 
-      if (clError)
-        throw new Error(`Fel vid uppladdning av portfölj: ${clError.message}`);
+      if (anotherError)
+        throw new Error(`Portfolio Upload Error: ${anotherError.message}`);
 
       finalAnotherUrl = supabaseAdmin.storage
         .from("another-files")
-        .getPublicUrl(clFileName).data.publicUrl;
-      finalAnotherPath = clFileName; // تحديث المسار الجديد
+        .getPublicUrl(anotherFileName).data.publicUrl;
+      finalAnotherPath = anotherFileName;
     }
-    const { data: existingApplication, error: checkError } = await supabase
+
+    // 8. التحقق من عدم التكرار في التقديم
+    const { data: existingApp } = await supabaseClient
       .from("applications")
       .select("id")
       .eq("user_id", userId)
       .eq("job_id", jobId)
-      .single(); // نتوقع نتيجة واحدة فقط إذا وجد
+      .single();
 
-    // 2. إذا وجدنا بيانات، فهذا يعني أنه قدم من قبل
-    if (existingApplication) {
-      throw new Error("Du har redan skickat en ansökan för det här jobbet.");
-      // ترجمة: لقد قمت بالفعل بإرسال طلب لهذه الوظيفة.
-    }
-    // 5. حفظ الطلب في جدول applications
-    const { error: dbError } = await supabase.from("applications").insert({
-      user_id: userId,
-      job_id: jobId,
-      status: "inkommen",
-      cv_url: finalCvUrl,
-      another_url: finalAnotherUrl,
-      coverletter: coverLetter,
-    });
+    if (existingApp) throw new Error("Du har redan sökt det här jobbet.");
+
+    // 9. حفظ الطلب في قاعدة البيانات
+    const { error: dbError } = await supabaseClient
+      .from("applications")
+      .insert({
+        user_id: userId,
+        job_id: jobId,
+        status: "inkommen",
+        cv_url: finalCvUrl,
+        another_url: finalAnotherUrl,
+        coverletter: coverLetter,
+        match_score: matchScore,
+        ai_analysis: aiAnalysis,
+      });
 
     if (dbError) throw dbError;
 
-    // 6. تحديث البروفايل (عشان يضل السيفي والباث محدثين دائماً في حساب المستخدم)
+    // 10. تحديث بروفايل المستخدم بالملفات الجديدة
     const profileUpdate = {};
     if (newCvFile && newCvFile.size > 0) {
       profileUpdate.cv_url = finalCvUrl;
@@ -546,25 +635,20 @@ export async function applyToJobb(prevState, formData) {
         .eq("id", userId);
     }
 
-    // 7. إرسال إشعار للأدمن (صاحب الوظيفة)
-    const { data: job } = await supabaseAdmin
-      .from("jobs")
-      .select("created_by, title")
-      .eq("id", jobId)
-      .single();
-
-    if (job?.created_by) {
+    // 11. إرسال إشعار لصاحب الوظيفة
+    if (jobData?.created_by) {
       await supabaseAdmin.from("notifications").insert({
-        user_id: job.created_by,
+        user_id: jobData.created_by,
         title: "Ny arbetssökande",
-        message: `${fullName} ansökt om "${job.title}"`,
+        message: `${fullName} har sökt "${jobData.title}"`,
         type: "application",
         link: `/admin/applications/${jobId}`,
       });
     }
 
     revalidatePath("/jobs");
-    revalidatePath("/account/info"); // تحديث صفحة البروفايل أيضاً لأن البيانات تغيرت
+    revalidatePath("/account/info");
+
     return { success: true };
   } catch (error) {
     console.error("Apply Job Error:", error);
@@ -577,15 +661,27 @@ export async function updateApplicationStatus(applicationId, jobId, newStatus) {
   const supabaseAdmin = getSupabaseAdmin();
   if (!session) return { formError: "Du måste vara inloggad" };
 
-  const userId = session.user.id;
-
-  const { data: job } = await supabaseAdmin
+  const { data: job, error: jobError } = await supabaseAdmin
     .from("jobs")
-    .select(" title")
+    .select("title")
     .eq("id", jobId)
     .single();
 
-  const jobTitle = job.title;
+  if (jobError) {
+    console.log("Error fetching job:", jobError.message);
+    throw new Error("Kunde inte hitta jobbet");
+  }
+
+  const { data: application, error: applicationError } = await supabaseAdmin
+    .from("applications")
+    .select("user_id")
+    .eq("id", applicationId)
+    .single();
+
+  if (applicationError) {
+    console.log("Error fetching application:", applicationError.message);
+    throw new Error("Kunde inte hitta ansökan");
+  }
 
   const { error } = await supabaseAdmin
     .from("applications")
@@ -597,10 +693,10 @@ export async function updateApplicationStatus(applicationId, jobId, newStatus) {
     throw new Error("Kunde inte uppdatera appens status");
   }
 
-  createNotification({
-    user_id: userId,
+  await createNotification({
+    user_id: application?.user_id,
     title: "Statusuppdatering",
-    message: `Din ansökan till ${jobTitle} status uppdaterad till ${newStatus}`,
+    message: `Din ansökan till ${job?.title || "jobbet"} status uppdaterad till ${newStatus}`,
     type: "status",
     link: `/account/applications`,
   });
@@ -632,4 +728,216 @@ export async function deleteAllNotifications(userId) {
 
   // لإجبار Next.js على تحديث البيانات في الصفحة فوراً
   revalidatePath("/notifications");
+}
+
+export default async function reviewApplicant(prevState, formData) {
+  const session = await getServerSession(authConfig);
+
+  if (!session || session.user.role !== "admin") {
+    return { error: "Inte auktoriserad" };
+  }
+
+  const supabase = getSupabaseWithAuth(session);
+  const userId = session.user.id;
+
+  const appId = formData.get("id");
+  const profId = formData.get("profileId");
+
+  const note = formData.get("note");
+  const rating = Number(formData.get("rating"));
+  const saved = formData.get("saved") === "on"; // 🔥 مهم
+
+  // 🔍 check existing
+  const { data: existing } = await supabase
+    .from("applicant_reviews")
+    .select("application_id")
+    .eq("hr_user_id", userId)
+    .eq("application_id", appId)
+    .eq("user_id", profId)
+    .maybeSingle();
+
+  // 🔥 insert أو update
+  const { error } = await supabase.from("applicant_reviews").upsert(
+    {
+      hr_user_id: userId,
+      application_id: appId,
+      user_id: profId,
+      note,
+      rating,
+      saved,
+      updated_at: new Date(),
+    },
+    {
+      onConflict: "hr_user_id,application_id",
+    },
+  );
+
+  if (error) {
+    throw new Error("Updatering fel");
+  }
+
+  revalidatePath(`/applications`);
+
+  return { success: true };
+}
+
+export async function scheduleInterview(formData) {
+  const session = await getServerSession(authConfig);
+
+  // 1. التحقق من الصلاحيات (فقط الأدمن يحجز موعد)
+  if (!session || session.user.role !== "admin") {
+    throw new Error("Du har inte behörighet att boka intervjuer.");
+  }
+
+  const supabase = getSupabaseWithAuth(session);
+
+  // 2. استخراج البيانات من الـ Form
+  const applicationId = formData.get("applicationId");
+  const startDateStr = formData.get("startTime"); // سنستقبله بصيغة ISO من الكالندر
+  const duration = parseInt(formData.get("duration")) || 30; // مدة المقابلة بالدقائق (افتراضي 30)
+  const type = formData.get("type") || "online";
+  const location = formData.get("location") || "";
+  const note = formData.get("note") || "";
+  const title = formData.get("title") || "";
+  const profileId = formData.get("profileId") || "";
+
+  console.log(profileId);
+
+  // 3. حساب وقت النهاية
+  const startDate = new Date(startDateStr);
+  const endDate = addMinutes(startDate, duration);
+
+  // 4. إدخال البيانات في جدول interviews
+  const { data, error } = await supabase
+    .from("interviews")
+    .insert([
+      {
+        application_id: applicationId,
+        hr_user_id: session.user.id,
+        start_time: formatISO(startDate),
+        end_time: formatISO(endDate),
+        location_or_link: location,
+        interviewer_note: note,
+        type: type,
+        status: "scheduled",
+      },
+    ])
+    .select();
+
+  // 5. معالجة الأخطاء (خاصة خطأ التداخل)
+  if (error) {
+    console.error("Supabase Interview Error:", error);
+
+    // كود الخطأ 23P01 في Postgres يعني انتهاك قيد الـ EXCLUDE (تداخل مواعيد)
+    if (error.code === "23P01") {
+      return {
+        error:
+          "Tidslinjen krockar! Du har redan en annan bokning under denna tid.",
+      };
+    }
+
+    return { error: "Kunde inte boka intervjun. Försök igen senare." };
+  }
+
+  // 6. تحديث حالة الطلب تلقائياً إلى "Interview" (اختياري لكن احترافي)
+  await supabase
+    .from("applications")
+    .update({ status: "intervju" })
+    .eq("id", applicationId);
+
+  await createNotification({
+    user_id: profileId,
+    title: "Statusuppdatering",
+    message: `Din ansökan till ${title || "jobbet"} status uppdaterad till intervju`,
+    type: "status",
+    link: `/account/applications`,
+  });
+
+  // تحديث الكاش لصفحة المواعيد وصفحة الطلبات
+  revalidatePath("/admin/interviews");
+  revalidatePath(`/admin/applications/${applicationId}`);
+
+  return { success: true, data };
+}
+
+export async function deleteInterview(interviewId) {
+  const session = await getServerSession(authConfig);
+  const supabase = getSupabaseWithAuth(session);
+
+  const { error } = await supabase
+    .from("interviews")
+    .delete()
+    .eq("id", interviewId);
+
+  if (error) {
+    console.error("Error deleting interview:", error);
+    return { error: "Kunde inte radera intervjun." };
+  }
+
+  revalidatePath("/admin/interviews");
+  return { success: true };
+}
+
+export async function updateInterviewTime(interviewId, startISO, endISO) {
+  const session = await getServerSession(authConfig);
+  const supabase = getSupabaseWithAuth(session);
+
+  const { error } = await supabase
+    .from("interviews")
+    .update({
+      start_time: startISO,
+      end_time: endISO,
+    })
+    .eq("id", interviewId);
+
+  if (error) {
+    // خطأ تداخل المواعيد (الذي برمجناه في SQL سابقا)
+    if (error.code === "23P01") {
+      return { error: "Tidslinjen krockar! Du har redan en annan bokning." };
+    }
+    return { error: "Kunde inte uppdatera tiden." };
+  }
+
+  revalidatePath("/admin/interviews");
+  return { success: true };
+}
+
+/**
+ * 3. تحديث كامل لتفاصيل المقابلة (من الـ Modal)
+ */
+export async function updateInterviewDetails(formData) {
+  const session = await getServerSession(authConfig);
+  const supabase = getSupabaseWithAuth(session);
+
+  console.log(formData);
+
+  const id = formData.get("id");
+  const type = formData.get("type");
+  const location = formData.get("location");
+  const note = formData.get("note");
+  const userIdN = formData.get("userId");
+
+  console.log(userIdN);
+
+  const { error } = await supabase
+    .from("interviews")
+    .update({
+      type,
+      location_or_link: location,
+      interviewer_note: note,
+    })
+    .eq("id", id);
+
+  if (error) return { error: "Kunde inte uppdatera intervjun." };
+
+  await createNotification({
+    user_id: userIdN,
+    // title: "Statusuppdatering",
+    // message: `Din ansökan till ${title || "jobbet"} status uppdaterad till intervju`,
+    // type: "status",
+    // link: `/account/applications`,
+  });
+
+  revalidatePath("/admin/interviews");
+  return { success: true };
 }

@@ -4,13 +4,15 @@ export default function ProfileStrength({ value = 0 }) {
   const percentage = Math.min(Math.max(value, 0), 100);
 
   return (
-    <div className="bg-white p-8 rounded-4xl shadow-sm border border-gray-50 flex flex-col gap-4">
+    <div className="bg-white p-4 md:p-8 rounded-4xl shadow-sm border border-gray-50 flex flex-col gap-4">
       <div className="flex justify-between items-end">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
             Profilstyrka
           </p>
-          <h4 className="text-2xl font-black text-gray-800">Din profil</h4>
+          <h4 className="text-xl md:text-2xl font-black text-gray-800">
+            Din profil
+          </h4>
         </div>
         <span className="text-2xl font-black text-[#2ecc91]">
           {percentage}%

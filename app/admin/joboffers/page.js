@@ -1,5 +1,6 @@
 import { JobsListAdmin } from "@/app/_components/admin";
-import { JobFilters, Spinner } from "@/app/_components/shared";
+import JobsfilterAdmin from "@/app/_components/admin/JobsFilterAdmin";
+import { Spinner } from "@/app/_components/shared";
 import AddJobButton from "@/app/_components/ui/AddJobButton";
 
 import { Suspense } from "react";
@@ -12,10 +13,10 @@ export default async function Page({ searchParams }) {
       {/* 1. الهيدر مع زر الإضافة */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-4xl border border-gray-100 shadow-sm">
         <div className="space-y-2">
-          <h2 className="text-4xl font-black text-[#2d2e3e] tracking-tighter">
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight uppercase">
             Jobb <span className="text-[#2ecc91]">Annonser</span>
-          </h2>
-          <p className="text-gray-500 font-medium text-lg leading-relaxed">
+          </h1>
+          <p className="text-gray-500 font-medium my-2">
             Hantera, redigera och publicera dina tjänster härifrån.
           </p>
         </div>
@@ -26,7 +27,7 @@ export default async function Page({ searchParams }) {
 
       {/* 3. أدوات الفلترة والبحث */}
       <div className="bg-white/80 backdrop-blur-md p-6 rounded-4xl shadow-md border border-gray-100">
-        <JobFilters />
+        <JobsfilterAdmin />
       </div>
 
       {/* 4. قائمة الوظائف مع Suspense */}

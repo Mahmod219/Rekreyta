@@ -36,7 +36,7 @@ Dropdown.Menu = function Menu({ children }) {
   if (!open) return null;
 
   return (
-    <div className="absolute right-0 mt-2 w-40 bg-primary-50 shadow-2xl rounded-2xl  z-50">
+    <div className="absolute right-0 mt-2 w-40 bg-white shadow-2xl rounded-2xl  z-50">
       {children}
     </div>
   );

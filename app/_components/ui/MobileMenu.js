@@ -1,8 +1,8 @@
 "use client";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useState } from "react";
-import { SignOutButton } from "../shared/SignOutButton";
+import SignOutButton from "../shared/SignOutButton";
 
 export default function MobileMenu({ navLinks, session }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,11 +10,11 @@ export default function MobileMenu({ navLinks, session }) {
   return (
     <div className="lg:hidden">
       {/* زر البرغر */}
-      <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-gray-600">
+      <button onClick={() => setIsOpen(!isOpen)} className="p-1 text-gray-600 ">
         {isOpen ? (
-          <XMarkIcon className="h-7 w-7" />
+          <XMarkIcon className="h-7 w-7 " />
         ) : (
-          <Bars3Icon className="h-8 w-8" />
+          <Bars3Icon className="h-8 w-8 " />
         )}
       </button>
 

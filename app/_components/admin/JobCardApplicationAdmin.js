@@ -51,7 +51,7 @@ export default function JobCardApplicationAdmin({ job, applicantsCount = 0 }) {
           </span>
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter flex items-center gap-1">
             <UserGroupIcon className="h-3 w-3" />
-            Applicants
+            Ansökningar
           </span>
         </div>
 

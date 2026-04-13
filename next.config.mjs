@@ -11,10 +11,27 @@ const nextConfig = {
     ],
   },
 
+  // دمجنا كل شي جوا experimental واحد عشان ما يصير تضارب
   experimental: {
     serverActions: {
-      bodySizeLimit: "5mb", // 🔥 مهم لرفع الصور والـ CV
+      bodySizeLimit: "5mb",
     },
+    // ملاحظة: إذا كنت تستخدم إصدار 15+ التيربو غالباً ما يحتاج إعدادات هنا
+  },
+
+  turbopack: {},
+
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        child_process: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
 };
 

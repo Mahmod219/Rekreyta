@@ -1,3 +1,4 @@
+import getSavedJob from "@/app/_lib/data-service";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import {
@@ -8,17 +9,12 @@ import {
   FolderIcon,
   MapPinIcon,
 } from "@heroicons/react/24/solid";
+import { isToday } from "date-fns";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
-import SaveJobButton from "./SaveJobButton";
-import getSavedJob from "@/app/_lib/data-service";
 import ShareJobButton from "../ui/ShareJobButton";
-import {
-  formatDistanceToNow,
-  formatDistanceToNowStrict,
-  isToday,
-} from "date-fns";
+import SaveJobButton from "./SaveJobButton";
 
 export default async function JobCard({ job }) {
   const session = await getServerSession(authConfig);
@@ -34,6 +30,7 @@ export default async function JobCard({ job }) {
     category,
     duration,
     employmentType,
+    application_deadline,
     location,
     title,
     created_at,
@@ -44,6 +41,7 @@ export default async function JobCard({ job }) {
   isInitialSaved = allSavedJobsIds.includes(id);
 
   const isCreatedToday = isToday(new Date(created_at));
+  const isDeadlineToday = isToday(new Date(application_deadline));
 
   return (
     <div className="group relative rounded-3xl border border-gray-300/50 bg-white p-5 md:p-6 shadow-lg transition-all duration-300  hover:shadow-xl hover:-translate-y-1  hover:border-[#2ecc91]/30 w-full overflow-hidden">
@@ -53,6 +51,13 @@ export default async function JobCard({ job }) {
         <div className="absolute top-0 right-0 w-28 h-28 overflow-hidden">
           <div className="absolute top-5 -right-8.75 rotate-45 bg-[#2ecc91] text-white text-xs font-semibold py-1 w-35 text-center shadow-md">
             Nytt
+          </div>
+        </div>
+      )}
+      {isDeadlineToday && (
+        <div className="absolute top-0 right-0 w-28 h-28 overflow-hidden">
+          <div className="absolute top-5 -right-8.75 rotate-45 bg-red-500/90 text-white text-xs font-semibold py-1.5 w-35 text-center shadow-md">
+            Sista dag idag
           </div>
         </div>
       )}
@@ -108,17 +113,17 @@ export default async function JobCard({ job }) {
           text={duration}
         />
         <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 md:px-3 md:py-1.5 rounded-lg shrink-0">
-          Publicerad:
+          Ansök senast
           <CalendarDaysIcon className="h-3.5 w-3.5 md:h-4 md:w-4" />
           <span className="whitespace-nowrap">
-            {new Date(created_at).toLocaleDateString("en-GB")}
+            {new Date(application_deadline).toLocaleDateString("en-GB")}
           </span>
         </div>
       </div>
 
       {/* Footer: Date & Show More */}
       <div className="pt-4 border-t  border-gray-50 flex flex-row items-center justify-between gap-2">
-        <div className="flex items-center gap-2 self-end sm:self-start shrink-0">
+        <div className="flex items-center gap-6 self-end sm:self-start shrink-0">
           <ShareJobButton jobTitle={title} jobId={id} company={company} />
           {session?.user && (
             <div className="flex items-center justify-center w-10 h-10">
@@ -129,7 +134,7 @@ export default async function JobCard({ job }) {
 
         <Link
           href={`/jobs/${id}`}
-          className="flex items-center gap-1 text-xs md:text-sm font-extrabold text-[#2d2e3e] hover:text-[#2ecc91] transition-all group-hover:gap-2 whitespace-nowrap"
+          className="flex items-center gap-1 text-xs md:text-sm font-extrabold text-gray-800 hover:text-[#2ecc91] transition-all group-hover:gap-2 whitespace-nowrap"
         >
           LÄS MER
           <ChevronRightIcon className="h-4 w-4" />

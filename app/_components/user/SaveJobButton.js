@@ -42,18 +42,19 @@ export default function SaveJobButton({ jobId, initialSaved }) {
     <button
       onClick={handleSave}
       disabled={isLoading}
-      className="group outline-none focus:scale-110 transition-transform active:scale-95"
+      className="group outline-none flex items-center gap-1 focus:scale-110 transition-transform active:scale-95"
       title={isSaved ? "Ta bort" : "Spara"}
     >
       <div className="transition-colors duration-300">
         {isSaved ? (
           // أيقونة القلب الممتلئ عند الحفظ
-          <HeartSolid className="h-8 w-8 text-red-500 " />
+          <HeartSolid className="h-7 w-7 text-red-500 " />
         ) : (
           // أيقونة القلب المفرغ قبل الحفظ
-          <HeartOutline className="h-8 w-8 text-gray-400 group-hover:text-red-400" />
+          <HeartOutline className="h-7 w-7 text-gray-400 group-hover:text-red-400" />
         )}
       </div>
+      <span className="text-sm font-bold text-gray-400">Spara</span>
     </button>
   );
 }

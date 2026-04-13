@@ -32,9 +32,10 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
     updated_at,
     zipcode,
   } = accountInfo;
+
   useEffect(() => {
     if (state?.success) {
-      toast.success("Thank you for appling this job");
+      toast.success("Tack för att du sökte det här jobbet");
     }
     if (state?.formError) {
       toast.error(state.formError);
@@ -44,7 +45,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
   const handleDelete = async (type) => {
     if (
       !confirm(
-        `Are you sure you want to delete this ${type === "cv" ? "CV" : "file"}?`,
+        `Är du säker på att du vill ta bort detta ${type === "cv" ? "CV" : "file"}?`,
       )
     )
       return;
@@ -53,9 +54,9 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
     const res = await deleteFile(type);
 
     if (res?.success) {
-      toast.success("File deleted successfully");
+      toast.success("Filen har raderats");
     } else {
-      toast.error("Failed to delete file");
+      toast.error("Fmisslyckades med att ta bort filen");
     }
     setIsDeleting((prev) => ({ ...prev, [type]: false }));
   };
@@ -64,6 +65,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
       <div className="max-w-4xl mx-auto space-y-10  ">
         <div className=" items-center bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
           <input type="hidden" name="jobId" value={jobId || ""} />
+          <input type="hidden" name="existingCvUrl" value={cv_url || ""} />
 
           <div className="flex items-center gap-3 border-b border-gray-50 pb-4 mb-6">
             <UserIcon className="h-6 w-6 text-primary-300" />
@@ -79,7 +81,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 name="firstname"
                 type="text"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="First Name"
+                placeholder="Förnamn"
                 defaultValue={firstname}
               />
               {state?.fieldErrors?.firstname && (
@@ -97,7 +99,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 type="text"
                 required
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="Last Name"
+                placeholder="Efternamn"
                 defaultValue={lastname}
               />
               {state?.fieldErrors?.lastname && (
@@ -126,7 +128,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 name="phone"
                 type="tel"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="Phone"
+                placeholder="Telefon"
                 defaultValue={phone}
               />
               {state?.fieldErrors?.phone && (
@@ -156,7 +158,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 name="address"
                 type="text"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="Address"
+                placeholder="Adress"
                 defaultValue={address}
               />
               {state?.fieldErrors?.address && (
@@ -173,7 +175,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 name="zipcode"
                 type="text"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="Zip"
+                placeholder="Postnummer"
                 defaultValue={zipcode}
               />
               {state?.fieldErrors?.zipcode && (
@@ -188,7 +190,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 name="city"
                 type="text"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:border-primary-300 outline-none transition-all"
-                placeholder="City"
+                placeholder="Stad"
                 defaultValue={city}
               />
               {state?.fieldErrors?.city && (
@@ -328,7 +330,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
           <button
             type="submit"
             disabled={isPending}
-            className="bg-primary-400 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-primary-600 transition-all shadow-lg mx-auto cursor-pointer  "
+            className="bg-[#2ecc91] text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-[#2ecc91]/90 transition-all shadow-lg mx-auto cursor-pointer  "
           >
             {isPending ? "Ansöker..." : "Ansök"}
           </button>

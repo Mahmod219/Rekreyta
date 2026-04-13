@@ -1,86 +1,115 @@
 export const JOB_TYPE_OPTIONS = [
-  { value: "Full-time", label: "Full-time" },
+  { value: "Heltid", label: "Heltid" },
 
-  { value: "Part-time", label: "Part-time" },
+  { value: "Deltid", label: "Deltid" },
 
-  { value: "Contract", label: "Contract" },
+  { value: "Kontrakt", label: "Kontrakt" },
 
-  { value: "Remote", label: "Remote" },
+  { value: "Distant", label: "Distant" },
 
-  { value: "Internship", label: "Internship" },
+  { value: "Praktikplats", label: "Praktikplats" },
 
-  { value: "Summer Job", label: "Summer Job" },
+  { value: "Sommarjobb", label: "Sommarjobb" },
+  { value: "Vikariat", label: "Vikariat" },
 ];
 
 export const CATEGORY_OPTIONS = [
-  { value: "all", label: "All Categories" },
+  { value: "all", label: "Alla kategorier" },
 
-  { value: "IT & Software", label: "IT & Software" },
-
-  { value: "Healthcare", label: "Healthcare" },
-
-  { value: "Engineering", label: "Engineering" },
-
-  { value: "Education", label: "Education" },
-
-  { value: "Finance", label: "Finance & Accounting" },
-
-  { value: "marketing", label: "Marketing & Sales" },
-  { value: "industries", label: "Industries" },
-
-  { value: "Logistics", label: "Logistics & Transport" },
   {
-    value: "carpentry & handicrafts",
-    label: "Carpentry & handicrafts",
+    value: "Administration, ekonomi, juridik",
+    label: "Administration, ekonomi, juridik",
   },
 
-  { value: "Construction", label: "Construction" },
+  { value: "Bygg och anläggning", label: "Bygg och anläggning" },
 
-  { value: "Restaurant", label: "Hotels & Restaurants" },
+  {
+    value: "Chefer och verksamhetsledare",
+    label: "Chefer och verksamhetsledare",
+  },
+
+  { value: "Data/IT", label: "Data/IT" },
+
+  {
+    value: "Försäljning, inköp, marknadsföring",
+    label: "Försäljning, inköp, marknadsföring",
+  },
+
+  { value: "Hantverksyrken", label: "Hantverksyrken" },
+  {
+    value: "Hotell, restaurang, storhushåll",
+    label: "Hotell, restaurang, storhushåll",
+  },
+
+  { value: "Hälso- och sjukvård", label: "Hälso- och sjukvård" },
+  {
+    value: "Industriell tillverkning",
+    label: "Industriell tillverkning",
+  },
+
+  {
+    value: "Installation, drift, underhåll",
+    label: "Installation, drift, underhåll",
+  },
+  {
+    value: "Kropps- och skönhetsvård",
+    label: "Kropps- och skönhetsvård",
+  },
+
+  { value: "Kultur, media, design", label: "Kultur, media, design" },
+  { value: "Militärt arbete", label: "Militärt arbete" },
+  { value: "Naturbruk", label: "Naturbruk" },
+  { value: "Naturvetenskapligt arbete", label: "Naturvetenskapligt arbete" },
+  { value: "Pedagogiskt arbete", label: "Pedagogiskt arbete" },
+  { value: "Sanering och renhållning", label: "Sanering och renhållning" },
+  { value: "Socialt arbete", label: "Socialt arbete" },
+  { value: "Säkerhetsarbete", label: "Säkerhetsarbete" },
+  { value: "Tekniskt arbete", label: "Tekniskt arbete" },
+  { value: "Transport", label: "Transport" },
 ];
 
 export const LOCATION = [
-  { value: "all", label: "All Sweden" },
+  { value: "all", label: "Hela Sverige" },
 
-  { value: "Stockholm", label: "Stockholm County (Stockholms län)" },
+  { value: "Stockholm", label: "Stockholm län" },
 
-  { value: "Uppsala", label: "Uppsala County (Uppsala län)" },
+  { value: "Uppsala", label: "Uppsala County län" },
 
-  { value: "Södermanland", label: "Södermanland County" },
+  { value: "Södermanland", label: "Södermanland län" },
 
-  { value: "Östergötland", label: "Östergötland County" },
+  { value: "Östergötland", label: "Östergötland län" },
 
-  { value: "Jönköping", label: "Jönköping County" },
+  { value: "Jönköping", label: "Jönköping län" },
 
-  { value: "Kronoberg", label: "Kronoberg County" },
+  { value: "Kronoberg", label: "Kronoberg län" },
 
-  { value: "Kalmar", label: "Kalmar County" },
+  { value: "Kalmar", label: "Kalmar län" },
 
-  { value: "Gotland", label: "Gotland County" },
+  { value: "Gotland", label: "Gotland län" },
 
-  { value: "Blekinge", label: "Blekinge County" },
+  { value: "Blekinge", label: "Blekinge län" },
 
-  { value: "Skåne", label: "Skåne County" },
+  { value: "Skåne", label: "Skåne län" },
 
-  { value: "Halland", label: "Halland County" },
+  { value: "Halland", label: "Halland län" },
 
-  { value: "Västra Götaland", label: "Västra Götaland County" },
+  { value: "Västra Götaland", label: "Västra Götaland län" },
 
-  { value: "Värmland", label: "Värmland County" },
+  { value: "Värmland", label: "Värmland län" },
 
-  { value: "Örebro", label: "Örebro County" },
+  { value: "Örebro", label: "Örebro län" },
 
-  { value: "Västmanland", label: "Västmanland County" },
+  { value: "Västmanland", label: "Västmanland län" },
 
-  { value: "Dalarna", label: "Dalarna County" },
+  { value: "Dalarna", label: "Dalarna län" },
 
-  { value: "Gävleborg", label: "Gävleborg County" },
+  { value: "Gävleborg", label: "Gävleborg län" },
 
-  { value: "Västernorrland", label: "Västernorrland County" },
+  { value: "Västernorrland", label: "Västernorrland län" },
 
-  { value: "Jämtland", label: "Jämtland County" },
+  { value: "Jämtland", label: "Jämtland län" },
 
-  { value: "Västerbotten", label: "Västerbotten County" },
+  { value: "Västerbotten", label: "Västerbotten län" },
 
-  { value: "Norrbotten", label: "Norrbotten County" },
+  { value: "Norrbotten", label: "Norrbotten län" },
 ];

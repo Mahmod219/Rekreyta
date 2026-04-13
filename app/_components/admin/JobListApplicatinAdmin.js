@@ -1,23 +1,31 @@
 import { getJobsAdmin } from "@/app/_lib/data-service";
 import JobCardApplicationAdmin from "./JobCardApplicationAdmin";
+import PaginationControls from "../shared/PaginationControls";
 
 export default async function JobListApplicatinAdmin({ searchParams }) {
   const sParams = await searchParams;
   const query = sParams?.query || "";
+  const category = sParams?.category || "all";
+  const location = sParams?.location || "all";
+  const type = sParams?.type || "all";
   const sortBy = sParams?.sortBy || "newst";
+  const published = sParams?.published || "all";
+  const page = Number(sParams?.page) || 1;
+  const pageSize = 10;
 
-  const jobs = (await getJobsAdmin()) || [];
+  const { data: jobs, count } =
+    (await getJobsAdmin({
+      query,
+      category,
+      location,
+      sortBy,
+      published,
+      type,
+      page,
+      pageSize,
+    })) || [];
 
-  const filteredJobs = jobs.filter((job) => {
-    const serchTerm = query.toLowerCase();
-    const matchesQuery =
-      query === "" ||
-      job?.title?.toLowerCase().includes(serchTerm) ||
-      job?.company?.toLowerCase().includes(serchTerm) ||
-      job?.location?.toLowerCase().includes(serchTerm);
-
-    return matchesQuery;
-  });
+  const filteredJobs = jobs.filter((job) => job.applicantsCount > 0, []);
 
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     if (sortBy === "oldest") {
@@ -31,6 +39,9 @@ export default async function JobListApplicatinAdmin({ searchParams }) {
       return new Date(b.created_at) - new Date(a.created_at);
     }
   });
+
+  const totalPages = Math.ceil(count / pageSize);
+  const showPagination = totalPages > 1;
 
   return (
     <div>
@@ -49,6 +60,9 @@ export default async function JobListApplicatinAdmin({ searchParams }) {
           </p>
         )}
       </div>
+      {showPagination && (
+        <PaginationControls currentPage={page} totalPages={totalPages} />
+      )}
     </div>
   );
 }

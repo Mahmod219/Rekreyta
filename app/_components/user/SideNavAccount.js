@@ -38,7 +38,7 @@ export default function SideNavAccount() {
             <li key={link.name} className="flex-1 min-w-fit">
               <Link
                 href={link.href}
-                className={`py-4 px-5 flex items-center justify-center lg:justify-start gap-3 font-bold transition-all whitespace-nowrap
+                className={`py-2 px-2 sm:px-5 sm:py-4  flex items-center justify-center lg:justify-start gap-1 sm:gap-3 font-bold transition-all whitespace-nowrap
                   ${
                     isActive
                       ? "text-[#2ecc91] border-b-2 border-[#2ecc91] lg:border-b-0 lg:border-l-4 lg:bg-green-50"

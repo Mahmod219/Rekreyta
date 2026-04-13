@@ -5,10 +5,9 @@ import { Suspense } from "react";
 import { LatestOpportunities } from "./_components/user";
 
 import { Spinner } from "./_components/shared";
+import HowItWorks from "./_components/ui/HowItWorks";
 import Services from "./_components/ui/Services";
 import Statistics from "./_components/ui/Statistics";
-import HowItWorks from "./_components/ui/HowItWorks";
-import { Span } from "next/dist/trace";
 
 export default async function Page() {
   return (

@@ -11,7 +11,7 @@ export default async function page() {
   const userEmail = session.user.email;
 
   const account = (await getAccountInfo(userId)) || [];
-  console.log(account);
+
   return (
     <div>
       <CreateProfileForm account={account} userEmail={userEmail} />

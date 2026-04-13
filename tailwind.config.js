@@ -6,7 +6,6 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@tremor/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-
   theme: {
     extend: {
       colors: {
@@ -22,21 +21,18 @@ module.exports = {
           800: "#2d3033",
           900: "#161a1d",
         },
-
-        // 🔥 هذا أهم جزء
         brand: {
           50: "#ecfdf5",
           100: "#d1fae5",
           200: "#a7f3d0",
           300: "#6ee7b7",
           400: "#34d399",
-          500: "#2ecc91", // 👈 اللون الأساسي
+          500: "#2ecc91",
           600: "#059669",
           700: "#047857",
           800: "#065f46",
           900: "#064e3b",
         },
-
         tremor: {
           brand: {
             faint: "#eff6ff",
@@ -50,7 +46,6 @@ module.exports = {
       },
     },
   },
-
   plugins: [],
 };
 // /** @type {import('tailwindcss').Config} */

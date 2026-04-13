@@ -1,9 +1,11 @@
 "use client";
 
 import {
-  AdjustmentsHorizontalIcon,
-  BellAlertIcon,
+  BookmarkIcon,
   BriefcaseIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
   DocumentDuplicateIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
@@ -12,8 +14,13 @@ import { usePathname } from "next/navigation";
 const navLinks = [
   {
     name: "Översikt",
+    href: "/admin",
+    icon: <ClipboardDocumentListIcon className="h-5 w-5" />,
+  },
+  {
+    name: "Statistik",
     href: "/admin/dashboard",
-    icon: <AdjustmentsHorizontalIcon className="h-5 w-5" />,
+    icon: <ChartBarIcon className="h-5 w-5" />,
   },
   {
     name: "Lediga jobb",
@@ -25,13 +32,23 @@ const navLinks = [
     href: "/admin/applications",
     icon: <DocumentDuplicateIcon className="h-5 w-5" />,
   },
+  {
+    name: "Intervjuer",
+    href: "/admin/interviews",
+    icon: <CalendarIcon className="h-5 w-5" />,
+  },
+  {
+    name: "Kandidatbank",
+    href: "/admin/kandidatbank",
+    icon: <BookmarkIcon className="h-5 w-5" />,
+  },
 ];
 
 export default function SideNavAdmin() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-white  lg:border-none lg:shadow-sm lg:rounded-3xl overflow-hidden sticky top-16 lg:top-0 z-30">
+    <nav className="bg-white  lg:border-none  lg:rounded-3xl overflow-hidden sticky top-16 lg:top-0 z-30 shadow-xl">
       <ul className="flex flex-row lg:flex-col overflow-x-auto no-scrollbar bg-white">
         {navLinks.map((link) => {
           const isActive = pathname === link.href;

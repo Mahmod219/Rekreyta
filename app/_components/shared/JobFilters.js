@@ -1,124 +1,206 @@
+"use client";
+import {
+  AdjustmentsVerticalIcon,
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { SearchBar } from "../shared";
 import ClearFilters from "../ui/ClearFilters";
 import Filter from "../ui/Filter";
-import SearchBar from "./SearchBar";
 
-// components/JobFilters.js
 export default function JobFilters() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="grid grid-cols-1 items-center bg-white/90   sm:grid-cols-2 lg:grid-cols-2 gap-4  backdrop-blur-md p-4 sm:p-6 rounded-3xl shadow-lg border border-gray-100/50 w-full ">
-      {/* 1. البحث النصي - جعلناه يأخذ سطر كامل في الموبايل فقط */}
-      <div className="w-full">
-        <SearchBar placeholder="Jobbtitel, företag eller annat sökord" />
-      </div>
-
-      {/* 2. تصنيفات العمل */}
-      <Filter
-        filterField="category"
-        label="Category"
-        options={[
-          { value: "all", label: "All Categories" },
-
-          { value: "IT & Software", label: "IT & Software" },
-
-          { value: "Healthcare", label: "Healthcare" },
-
-          { value: "Engineering", label: "Engineering" },
-
-          { value: "Education", label: "Education" },
-
-          { value: "Finance", label: "Finance & Accounting" },
-
-          { value: "marketing", label: "Marketing & Sales" },
-          { value: "industries", label: "Industries" },
-
-          { value: "Logistics", label: "Logistics & Transport" },
-          {
-            value: "carpentry & handicrafts",
-            label: "Carpentry & handicrafts",
-          },
-
-          { value: "Construction", label: "Construction" },
-
-          { value: "Restaurant", label: "Hotels & Restaurants" },
-        ]}
-      />
-
-      {/* 3. المدن */}
-      <Filter
-        filterField="location"
-        label="Location"
-        options={[
-          { value: "all", label: "All Sweden" },
-
-          { value: "Stockholm", label: "Stockholm County (Stockholms län)" },
-
-          { value: "Uppsala", label: "Uppsala County (Uppsala län)" },
-
-          { value: "Södermanland", label: "Södermanland County" },
-
-          { value: "Östergötland", label: "Östergötland County" },
-
-          { value: "Jönköping", label: "Jönköping County" },
-
-          { value: "Kronoberg", label: "Kronoberg County" },
-
-          { value: "Kalmar", label: "Kalmar County" },
-
-          { value: "Gotland", label: "Gotland County" },
-
-          { value: "Blekinge", label: "Blekinge County" },
-
-          { value: "Skåne", label: "Skåne County" },
-
-          { value: "Halland", label: "Halland County" },
-
-          { value: "Västra Götaland", label: "Västra Götaland County" },
-
-          { value: "Värmland", label: "Värmland County" },
-
-          { value: "Örebro", label: "Örebro County" },
-
-          { value: "Västmanland", label: "Västmanland County" },
-
-          { value: "Dalarna", label: "Dalarna County" },
-
-          { value: "Gävleborg", label: "Gävleborg County" },
-
-          { value: "Västernorrland", label: "Västernorrland County" },
-
-          { value: "Jämtland", label: "Jämtland County" },
-
-          { value: "Västerbotten", label: "Västerbotten County" },
-
-          { value: "Norrbotten", label: "Norrbotten County" },
-        ]}
-      />
-
-      {/* 4. نوع الدوام */}
-      <Filter
-        filterField="type"
-        label="Job Type"
-        options={[
-          { value: "all", label: "All Types" },
-
-          { value: "Full-time", label: "Full-time" },
-
-          { value: "Part-time", label: "Part-time" },
-
-          { value: "Contract", label: "Contract" },
-
-          { value: "Remote", label: "Remote" },
-
-          { value: "Internship", label: "Internship" },
-
-          { value: "Summer Job", label: "Summer Job" },
-        ]}
-      />
-      <div>
-        <div className="pt-2  border-gray-100/50 mt-2">
-          <ClearFilters />
+    <div className="w-full space-y-4">
+      {/* السطر العلوي: البحث والتحكم */}
+      <div className="flex  items-center gap-3">
+        <div className="relative flex-1">
+          <SearchBar placeholder="Sök efter titel, företag..." />
         </div>
+
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`flex items-center gap-3 px-2 py-2.5 rounded-2xl border font-bold transition-all ${
+            isOpen
+              ? "bg-white text-gray-700 border-gray-200 hover:border-[#2ecc91]"
+              : "bg-[#2ecc91] text-white border-[#2ecc91] shadow-md"
+          }`}
+        >
+          <AdjustmentsVerticalIcon className="w-5 h-5" />
+          <span className="hidden md:flex items-center">Filtrera</span>
+          <ChevronUpIcon
+            className={`w-4 h-4 transition-transform ${!isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
       </div>
+
+      {/* صندوق الفلاتر - تقسيم عامودين */}
+      {isOpen && (
+        <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/40 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex flex-col gap-6 ">
+            {/* العمود الأول */}
+            <div className="space-y-6">
+              <Filter
+                filterField="category"
+                label="Kategori"
+                options={[
+                  { value: "all", label: "Alla kategorier" },
+
+                  {
+                    value: "Administration, ekonomi, juridik",
+                    label: "Administration, ekonomi, juridik",
+                  },
+
+                  {
+                    value: "Bygg och anläggning",
+                    label: "Bygg och anläggning",
+                  },
+
+                  {
+                    value: "Chefer och verksamhetsledare",
+                    label: "Chefer och verksamhetsledare",
+                  },
+
+                  { value: "Data/IT", label: "Data/IT" },
+
+                  {
+                    value: "Försäljning, inköp, marknadsföring",
+                    label: "Försäljning, inköp, marknadsföring",
+                  },
+
+                  { value: "Hantverksyrken", label: "Hantverksyrken" },
+                  {
+                    value: "Hotell, restaurang, storhushåll",
+                    label: "Hotell, restaurang, storhushåll",
+                  },
+
+                  {
+                    value: "Hälso- och sjukvård",
+                    label: "Hälso- och sjukvård",
+                  },
+                  {
+                    value: "Industriell tillverkning",
+                    label: "Industriell tillverkning",
+                  },
+
+                  {
+                    value: "Installation, drift, underhåll",
+                    label: "Installation, drift, underhåll",
+                  },
+                  {
+                    value: "Kropps- och skönhetsvård",
+                    label: "Kropps- och skönhetsvård",
+                  },
+
+                  {
+                    value: "Kultur, media, design",
+                    label: "Kultur, media, design",
+                  },
+                  { value: "Militärt arbete", label: "Militärt arbete" },
+                  { value: "Naturbruk", label: "Naturbruk" },
+                  {
+                    value: "Naturvetenskapligt arbete",
+                    label: "Naturvetenskapligt arbete",
+                  },
+                  { value: "Pedagogiskt arbete", label: "Pedagogiskt arbete" },
+                  {
+                    value: "Sanering och renhållning",
+                    label: "Sanering och renhållning",
+                  },
+                  { value: "Socialt arbete", label: "Socialt arbete" },
+                  { value: "Säkerhetsarbete", label: "Säkerhetsarbete" },
+                  { value: "Tekniskt arbete", label: "Tekniskt arbete" },
+                  { value: "Transport", label: "Transport" },
+                ]}
+              />
+            </div>
+            <div className="space-y-6">
+              <Filter
+                filterField="location"
+                label="Plats / Stad"
+                options={[
+                  { value: "all", label: "Hela Sverige" },
+
+                  { value: "Stockholm", label: "Stockholm län" },
+
+                  { value: "Uppsala", label: "Uppsala County län" },
+
+                  { value: "Södermanland", label: "Södermanland län" },
+
+                  { value: "Östergötland", label: "Östergötland län" },
+
+                  { value: "Jönköping", label: "Jönköping län" },
+
+                  { value: "Kronoberg", label: "Kronoberg län" },
+
+                  { value: "Kalmar", label: "Kalmar län" },
+
+                  { value: "Gotland", label: "Gotland län" },
+
+                  { value: "Blekinge", label: "Blekinge län" },
+
+                  { value: "Skåne", label: "Skåne län" },
+
+                  { value: "Halland", label: "Halland län" },
+
+                  { value: "Västra Götaland", label: "Västra Götaland län" },
+
+                  { value: "Värmland", label: "Värmland län" },
+
+                  { value: "Örebro", label: "Örebro län" },
+
+                  { value: "Västmanland", label: "Västmanland län" },
+
+                  { value: "Dalarna", label: "Dalarna län" },
+
+                  { value: "Gävleborg", label: "Gävleborg län" },
+
+                  { value: "Västernorrland", label: "Västernorrland län" },
+
+                  { value: "Jämtland", label: "Jämtland län" },
+
+                  { value: "Västerbotten", label: "Västerbotten län" },
+
+                  { value: "Norrbotten", label: "Norrbotten län" },
+                ]}
+              />
+            </div>
+
+            {/* العمود الثاني */}
+            <div className="space-y-6">
+              <Filter
+                filterField="type"
+                label="Anställning"
+                options={[
+                  { value: "Heltid", label: "Heltid" },
+
+                  { value: "Deltid", label: "Deltid" },
+
+                  { value: "Kontrakt", label: "Kontrakt" },
+
+                  { value: "Distant", label: "Distant" },
+
+                  { value: "Praktikplats", label: "Praktikplats" },
+
+                  { value: "Sommarjobb", label: "Sommarjobb" },
+                  { value: "Vikariat", label: "Vikariat" },
+                ]}
+              />
+            </div>
+
+            {/* مكون الترتيب يأخذ المساحة المتبقية في العمود الثاني */}
+          </div>
+
+          {/* التذييل: زر المسح ومعلومات إضافية */}
+          <div className="mt-8 pt-6 border-t border-gray-50 flex justify-between items-center">
+            <div className="text-xs text-gray-400">
+              Hittar du inte det du söker? Prova att rensa alla filter.
+            </div>
+            <ClearFilters />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

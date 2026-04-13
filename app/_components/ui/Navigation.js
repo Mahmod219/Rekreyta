@@ -7,14 +7,12 @@ import {
   PhoneIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { SignOutButton } from "../shared/SignOutButton";
+import SignOutButton from "../shared/SignOutButton";
 import MobileMenu from "./MobileMenu";
 import NotificationsBell from "./NotificationsBell";
 
-export default function Navigation({ savedJobs }) {
-  const { data: session } = useSession();
+export default function Navigation({ savedJobs, session }) {
   const navLinks = [
     {
       href: "/jobs",
@@ -39,7 +37,7 @@ export default function Navigation({ savedJobs }) {
   ];
 
   return (
-    <nav className="flex items-center gap-4 lg:gap-8">
+    <nav className="flex items-center gap-1 lg:gap-8">
       {/* 1. القائمة لنسخة الـ Desktop */}
       <ul className="hidden lg:flex gap-10 items-center">
         {navLinks.map((link) => (
