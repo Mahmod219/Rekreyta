@@ -75,7 +75,7 @@ export default async function Page({ searchParams }) {
           </div>
 
           {/* الإحصائية الكبيرة */}
-          <div className="bg-gray-900 p-8 rounded-[2.5rem] text-white flex flex-col items-center justify-center min-w-[180px] shadow-2xl shadow-gray-900/20">
+          <div className="bg-gray-900 p-8 rounded-[2.5rem] text-white flex flex-col items-center justify-center min-w-45 shadow-2xl shadow-gray-900/20">
             <span className="text-sm font-bold text-[#2ecc91] uppercase tracking-widest mb-2">
               Totalt sparade
             </span>
@@ -95,7 +95,7 @@ export default async function Page({ searchParams }) {
       </div>
 
       {/* 3. شبكة النتائج (Results Grid) */}
-      <div className="min-h-[400px]">
+      <div className="min-h-100">
         {candidates && candidates.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             <div className="flex items-center gap-4 px-6">
