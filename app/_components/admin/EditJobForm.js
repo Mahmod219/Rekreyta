@@ -47,7 +47,7 @@ export default function EditJobForm({ jobOffer }) {
     if (file) {
       // فحص الحجم لتجنب خطأ الـ 1MB الذي واجهته سابقاً
       if (file.size > 1024 * 1024) {
-        toast.error("Image is too large. Max 1MB allowed.");
+        toast.error("Bilden är för stor. Max 1MB allowed.");
         e.target.value = "";
         return;
       }
@@ -56,7 +56,7 @@ export default function EditJobForm({ jobOffer }) {
   };
 
   useEffect(() => {
-    if (state?.success) toast.success("Updated successfully!");
+    if (state?.success) toast.success("Uppdaterad!");
     if (state?.formError) toast.error(state.formError);
   }, [state]);
 

@@ -265,6 +265,7 @@ export default function ApplicationsAdmin({ application, rev }) {
                       rev={rev}
                       applicationId={id}
                       profileId={profile_id}
+                      currentProfile={profiles}
                     />
                   </div>
                 </div>

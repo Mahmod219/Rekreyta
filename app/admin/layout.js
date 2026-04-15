@@ -1,4 +1,7 @@
+import { getServerSession } from "next-auth";
 import { SideNavAdmin } from "../_components/admin";
+import { getTeamProfileInfo } from "../_lib/data-service";
+import { authConfig } from "../api/auth/[...nextauth]/route";
 
 // إضافة الميتاداتا (Metadata)
 export const metadata = {
@@ -9,7 +12,11 @@ export const metadata = {
   description: "Hantera ansökningar och intervjuer effektivt.",
 };
 
-export default function AdminLayout({ children }) {
+export default async function AdminLayout({ children }) {
+  const session = await getServerSession(authConfig);
+  const userRole = session?.user?.role;
+  // افترضنا عندك دالة بتجيب البروفايل من سوبابيس
+  const profile = await getTeamProfileInfo(session.user.id);
   return (
     <div className="max-w-360 mx-auto px-4 py-4 lg:py-8">
       {/* شبكة التصميم الرئيسية */}
@@ -23,7 +30,7 @@ export default function AdminLayout({ children }) {
               Admin <span className="text-[#2ecc91]">Panel</span>
             </h1>
           </div>
-          <SideNavAdmin />
+          <SideNavAdmin userRole={userRole} managedBy={profile?.managed_by} />
         </aside>
 
         {/* المحتوى الرئيسي - يبدأ من العمود الثاني لمحاذاة الهيدر */}

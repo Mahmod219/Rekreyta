@@ -4,6 +4,8 @@ import PaginationControls from "@/app/_components/shared/PaginationControls";
 import Filter from "@/app/_components/ui/Filter";
 
 import { getApplicationsByJob, getReview } from "@/app/_lib/data-service";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
 
 export default async function Page({ params, searchParams }) {
   const { jobId } = await params;

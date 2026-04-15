@@ -3,7 +3,7 @@
 import { Modal } from "../shared";
 import { ApplyJobForm } from "../user";
 
-export default function ApplyJobButton({ accountInfo, jobId }) {
+export default function ApplyJobButton({ accountInfo, jobId, userEmail }) {
   return (
     <div>
       <Modal>
@@ -13,7 +13,11 @@ export default function ApplyJobButton({ accountInfo, jobId }) {
           </button>
         </Modal.Open>
         <Modal.Window>
-          <ApplyJobForm accountInfo={accountInfo} jobId={jobId} />
+          <ApplyJobForm
+            accountInfo={accountInfo}
+            jobId={jobId}
+            userEmail={userEmail}
+          />
         </Modal.Window>
       </Modal>
     </div>

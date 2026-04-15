@@ -738,45 +738,87 @@ export default async function reviewApplicant(prevState, formData) {
   }
 
   const supabase = getSupabaseWithAuth(session);
-  const userId = session.user.id;
+  const currentUserId = session.user.id;
 
-  const appId = formData.get("id");
+  const appId = formData.get("id"); // قد يأتي كـ string فارغ أو null
   const profId = formData.get("profileId");
-
   const note = formData.get("note");
   const rating = Number(formData.get("rating"));
-  const saved = formData.get("saved") === "on"; // 🔥 مهم
+  const saved = formData.get("saved") === "on";
+  const mainCategory = formData.get("main_category");
 
-  // 🔍 check existing
-  const { data: existing } = await supabase
-    .from("applicant_reviews")
-    .select("application_id")
-    .eq("hr_user_id", userId)
-    .eq("application_id", appId)
-    .eq("user_id", profId)
-    .maybeSingle();
+  // تنظيف الـ appId: إذا كان فارغاً نجعله null فعلياً
+  const cleanAppId = appId && appId !== "" ? appId : null;
 
-  // 🔥 insert أو update
-  const { error } = await supabase.from("applicant_reviews").upsert(
-    {
-      hr_user_id: userId,
-      application_id: appId,
-      user_id: profId,
-      note,
-      rating,
-      saved,
-      updated_at: new Date(),
-    },
-    {
-      onConflict: "hr_user_id,application_id",
-    },
-  );
-
-  if (error) {
-    throw new Error("Updatering fel");
+  let tags = [];
+  try {
+    tags = JSON.parse(formData.get("tags") || "[]").map((t) =>
+      t.toLowerCase().trim(),
+    );
+  } catch (e) {
+    return { error: "Ogiltiga taggar." };
   }
 
-  revalidatePath(`/applications`);
+  // 1. تحديث البروفايل أولاً (الكاتيغوري والتاغ)
+  // وضعناها في البداية لضمان حفظها بغض النظر عن حالة المراجعة
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      main_category: mainCategory,
+      tags: tags,
+    })
+    .eq("id", profId);
+
+  if (profileError) {
+    console.error("Profile update error:", profileError);
+    return { error: "Kunde inte uppdatera profil-tags" };
+  }
+
+  // 2. التحقق من وجود مراجعة سابقة لهذا الموظف وهذا البروفايل
+  // نستخدم البحث بـ user_id و hr_user_id لأنهما ثابتان حتى لو حُذف الطلب
+  const { data: existingReview } = await supabase
+    .from("applicant_reviews")
+    .select("id, hr_user_id, application_id")
+    .eq("user_id", profId)
+    .eq("hr_user_id", currentUserId)
+    .maybeSingle();
+
+  // 3. منطق الحفظ (Upsert يدوي)
+  const reviewData = {
+    hr_user_id: currentUserId,
+    application_id: cleanAppId,
+    user_id: profId,
+    note,
+    rating,
+    saved,
+    updated_at: new Date(),
+  };
+
+  let reviewError;
+
+  if (existingReview) {
+    // إذا كانت المراجعة موجودة، نقوم بعمل Update باستخدام ID المراجعة نفسه
+    // هذا يحل مشكلة الـ Conflict تماماً
+    const { error } = await supabase
+      .from("applicant_reviews")
+      .update(reviewData)
+      .eq("id", existingReview.id);
+    reviewError = error;
+  } else {
+    // إذا كانت مراجعة جديدة تماماً
+    const { error } = await supabase
+      .from("applicant_reviews")
+      .insert(reviewData);
+    reviewError = error;
+  }
+
+  if (reviewError) {
+    console.error("Review save error:", reviewError);
+    return { error: "Fel vid uppdatering av recension" };
+  }
+
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/kandidatbank");
 
   return { success: true };
 }
@@ -939,5 +981,107 @@ export async function updateInterviewDetails(formData) {
   });
 
   revalidatePath("/admin/interviews");
+  return { success: true };
+}
+
+export async function addStaffMember(formData) {
+  const session = await getServerSession(authConfig);
+
+  // 1. حماية الأكشن: فقط الأدمن لديه الصلاحية
+  if (!session || session.user.role !== "admin") {
+    throw new Error("Behörighet saknas.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const adminId = session.user.id;
+
+  const email = formData.get("email")?.toLowerCase().trim();
+  const employeeId = formData.get("employee_id");
+  const subRole = formData.get("role");
+
+  if (!email || !employeeId) throw new Error("Alla fält är obligatoriska.");
+
+  // 2. فحص هل الإيميل موجود مسبقاً في جدول اليوزرز
+  const { data: existingUser } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingUser) {
+    // أ- إذا كان المستخدم موجوداً (سجل دخول سابقاً كطالب عمل مثلاً)
+    // نحدث دوره إلى admin في جدول users
+    await supabaseAdmin
+      .from("users")
+      .update({ role: "admin" })
+      .eq("id", existingUser.id);
+
+    // ننشئ أو نحدث بياناته في جدول فريق العمل الجديد team_profiles
+    const { error: upsertError } = await supabaseAdmin
+      .from("team_profiles")
+      .upsert({
+        id: existingUser.id, // نستخدم نفس ID اليوزر للربط
+        email: email,
+        managed_by: adminId,
+        employee_id: employeeId,
+        sub_role: subRole,
+      });
+
+    if (upsertError) throw new Error("Kunde inte uppdatera teamprofil.");
+  } else {
+    // ب- إذا كان الموظف جديد تماماً ولم يسجل دخول أبداً
+    // ننشئ له سجلاً في team_profiles بالإيميل فقط (سيتولد ID تلقائي مؤقت)
+    // والربط الحقيقي سيحدث في ملف authConfig عند أول تسجيل دخول له
+    const { error: insertError } = await supabaseAdmin
+      .from("team_profiles")
+      .insert([
+        {
+          email: email,
+          managed_by: adminId,
+          employee_id: employeeId,
+          sub_role: subRole,
+          // ملاحظة: الـ id هنا سيكون UUID عشوائي مؤقتاً
+        },
+      ]);
+
+    if (insertError)
+      throw new Error("Kunde inte lägga till medarbetare في جدول الفريق.");
+  }
+
+  // 3. تحديث واجهة الإدارة
+  revalidatePath("/admin/team");
+  return { success: true };
+}
+
+export async function deleteStaffMember(memberId) {
+  const session = await getServerSession(authConfig);
+
+  // حماية الأكشن: فقط الأدمن يملك صلاحية الحذف
+  if (!session || session.user.role !== "admin") {
+    throw new Error("Behörighet saknas.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+
+  // 1. تغيير رتبة المستخدم في جدول users ليعود مستخدماً عادياً
+  // نستخدم memberId لأنه هو نفسه الـ ID في جدول users
+  const { error: userError } = await supabaseAdmin
+    .from("users")
+    .update({ role: "user" })
+    .eq("id", memberId);
+
+  if (userError) throw new Error("Kunde inte återställa användarroll.");
+
+  // 2. حذف الموظف من جدول team_profiles تماماً
+  const { error: teamError } = await supabaseAdmin
+    .from("team_profiles")
+    .delete()
+    .eq("id", memberId);
+
+  if (teamError)
+    throw new Error("Kunde inte ta bort medarbetaren från teamet.");
+
+  // 3. تحديث الصفحة
+  revalidatePath("/admin/team");
   return { success: true };
 }

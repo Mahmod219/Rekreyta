@@ -14,9 +14,10 @@ import { toast } from "sonner";
 import PrivacyApply from "./PrivacyApply";
 import { applyToJobb, deleteFile } from "@/app/_lib/actions";
 
-export default function ApplyJobForm({ accountInfo, jobId }) {
+export default function ApplyJobForm({ accountInfo, jobId, userEmail }) {
   const [isDeleting, setIsDeleting] = useState({ cv: false, another: false });
   const [state, action, isPending] = useActionState(applyToJobb, {});
+
   const {
     address,
     another_path,
@@ -117,7 +118,7 @@ export default function ApplyJobForm({ accountInfo, jobId }) {
                 type="email"
                 readOnly
                 className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed"
-                defaultValue={email}
+                defaultValue={userEmail}
               />
             </div>
             <div className="space-y-2">

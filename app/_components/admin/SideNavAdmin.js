@@ -7,6 +7,7 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   DocumentDuplicateIcon,
+  UsersIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,15 +43,24 @@ const navLinks = [
     href: "/admin/kandidatbank",
     icon: <BookmarkIcon className="h-5 w-5" />,
   },
+  {
+    name: "Hantera Team", // إدارة الفريق بالسويدي
+    href: "/admin/team",
+    icon: <UsersIcon className="w-5 h-5" />,
+  },
 ];
 
-export default function SideNavAdmin() {
+export default function SideNavAdmin({ userRole, managedBy }) {
   const pathname = usePathname();
+  const isAdminRoot = userRole === "admin" && !managedBy;
 
   return (
-    <nav className="bg-white  lg:border-none  lg:rounded-3xl overflow-hidden sticky top-16 lg:top-0 z-30 shadow-xl">
+    <nav className="bg-white lg:border-none lg:rounded-3xl overflow-hidden sticky top-16 lg:top-0 z-30 shadow-xl">
       <ul className="flex flex-row lg:flex-col overflow-x-auto no-scrollbar bg-white">
         {navLinks.map((link) => {
+          // 🔒 حماية الزر: إذا كان الرابط هو إدارة الفريق والمستخدم مو أدمن رئيسي، لا ترجع شي
+          if (link.href === "/admin/team" && !isAdminRoot) return null;
+
           const isActive = pathname === link.href;
           return (
             <li key={link.name} className="flex-1 min-w-fit">

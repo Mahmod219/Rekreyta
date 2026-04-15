@@ -1,10 +1,10 @@
 export async function getMatchScoreFromAI(resumeText, jobDescription) {
-  const apiKey = process.env.GROQ_API_KEY; // المفتاح الجديد
+  const apiKey = process.env.GROQ_API_KEY;
 
   const cleanResume = resumeText.replace(/\s+/g, " ").slice(0, 6000);
 
   const prompt = {
-    model: "llama-3.3-70b-versatile", // موديل قوي جداً ومجاني
+    model: "llama-3.3-70b-versatile",
     messages: [
       {
         role: "system",
@@ -22,8 +22,6 @@ export async function getMatchScoreFromAI(resumeText, jobDescription) {
   };
 
   try {
-    console.log("--- ⚡ Sending to Groq (Llama 3) ---");
-
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -43,7 +41,7 @@ export async function getMatchScoreFromAI(resumeText, jobDescription) {
     }
 
     const content = data.choices[0].message.content;
-    console.log("--- ✅ Groq Response Success ---");
+
     return JSON.parse(content);
   } catch (error) {
     console.error("GROQ ERROR:", error.message);

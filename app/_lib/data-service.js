@@ -2,8 +2,6 @@
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
-import { AtSymbolIcon } from "@heroicons/react/24/solid";
-import { count } from "node:console";
 
 export async function getJobs({
   query = "",
@@ -72,21 +70,48 @@ export const getJobsAdmin = async function ({
 } = {}) {
   const session = await getServerSession(authConfig);
   if (!session) throw new Error("Not authenticated");
+
   const supabase = getSupabaseAdmin();
   const today = new Date().toISOString();
+  const userId = session.user.id;
 
-  let orderColumn = "created_at";
-  let ascending = false;
+  // 1. جلب معلومات الفريق
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
 
-  if (sortBy === "oldest") {
-    ascending = true;
-  } else if (sortBy === "deadline") {
-    orderColumn = "application_deadline";
-    ascending = false;
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  // 2. إذا كان أدمن (مدير)، نجيب قائمة IDs الموظفين اللي بتبعه
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
   }
+
   // --- دالة مساعدة لتطبيق الفلاتر المتكررة ---
   const applyFilters = (supabaseQuery) => {
-    let q = supabaseQuery.eq("created_by", session.user.id);
+    let q = supabaseQuery;
+
+    if (isStaff) {
+      // الموظف يرى فقط ما أنشأه هو
+      q = q.eq("created_by", userId);
+    } else {
+      // المدير يرى ما أنشأه هو + مصفوفة الموظفين التابعين له
+      // ندمج الـ userId مع الـ staffIds في مصفوفة واحدة
+      const allAccessibleIds = [userId, ...staffIds];
+      q = q.in("created_by", allAccessibleIds);
+    }
+
+    // الفلاتر العادية
     if (query) q = q.or(`title.ilike.%${query}%,company.ilike.%${query}%`);
     if (category !== "all") q = q.eq("category", category);
     if (location !== "all") q = q.eq("location", location);
@@ -96,23 +121,30 @@ export const getJobsAdmin = async function ({
     return q;
   };
 
-  // 1. جلب البيانات الأساسية للصفحة الحالية (مع البجنيشن)
+  // 3. جلب البيانات الأساسية (بجنيشن)
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   let mainQuery = supabase
     .from("jobs")
     .select(`*, applicants:applications(count)`, { count: "exact" });
+
   mainQuery = applyFilters(mainQuery);
 
   const { data, error, count } = await mainQuery
     .range(from, to)
-    .order(orderColumn, { ascending, nullsLast: true });
+    .order(
+      sortBy === "oldest"
+        ? "created_at"
+        : sortBy === "deadline"
+          ? "application_deadline"
+          : "created_at",
+      { ascending: sortBy === "oldest", nullsLast: true },
+    );
 
   if (error) throw new Error(error.message);
 
-  // 2. 🔥 جلب الإحصائيات بناءً على الفلاتر (بدون بجنيشن)
-  // نستخدم Promise.all لتسريع العملية بجعل الاستعلامات تعمل بالتوازي
+  // 4. جلب الإحصائيات بناءً على نفس الفلاتر
   const [pubRes, unpubRes, expRes] = await Promise.all([
     applyFilters(
       supabase.from("jobs").select("*", { count: "exact", head: true }),
@@ -135,7 +167,7 @@ export const getJobsAdmin = async function ({
 
   return {
     data: jobsWithCount,
-    count: count, // العدد الكلي للنتائج المفلترة (للبجنيشن)
+    count: count,
     stats: {
       publishedCount: pubRes.count || 0,
       unpublishedCount: unpubRes.count || 0,
@@ -307,8 +339,53 @@ export async function getApplicationsByJob({
   pageSize = 10,
 }) {
   const session = await getServerSession(authConfig);
-  const supabase = getSupabaseWithAuth(session);
+  if (!session) throw new Error("Du måste vara inloggad.");
 
+  const supabase = getSupabaseAdmin(); // نستخدم نسخة الأدمن لتسهيل الجلب عبر الجداول
+  const userId = session.user.id;
+
+  // 1. تحديد هوية المستخدم (مدير أم موظف) من جدول team_profiles
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+
+  // 2. التحقق من ملكية الوظيفة وصلاحية الوصول
+  const { data: jobData, error: jobError } = await supabase
+    .from("jobs")
+    .select("created_by")
+    .eq("id", jobId)
+    .single();
+
+  if (jobError || !jobData) throw new Error("Jobbet hittades inte.");
+
+  // منطق التحقق:
+  if (isStaff) {
+    // إذا كان موظف: يجب أن يكون هو من أنشأ الوظيفة حصراً
+    if (jobData.created_by !== userId) {
+      return { data: [], count: 0, error: "Behörighet saknas" };
+    }
+  } else {
+    // إذا كان مديراً: يجب أن تكون الوظيفة له أو لأحد موظفيه
+    // نتحقق إذا كان منشئ الوظيفة يتبع لهذا المدير
+    const { data: creatorProfile } = await supabase
+      .from("team_profiles")
+      .select("managed_by")
+      .eq("id", jobData.created_by)
+      .maybeSingle();
+
+    const isJobOwnedByHisStaff = creatorProfile?.managed_by === userId;
+    const isJobOwnedByHim = jobData.created_by === userId;
+
+    if (!isJobOwnedByHisStaff && !isJobOwnedByHim) {
+      return { data: [], count: 0, error: "Behörighet saknas" };
+    }
+  }
+
+  // 3. بناء الاستعلام للطلبات
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -324,13 +401,6 @@ export async function getApplicationsByJob({
       coverletter,
       match_score,
       ai_analysis,
-
-      jobs (
-        id,
-        title,
-        company
-      ),
-
       profiles (
         id,
         firstname,
@@ -346,41 +416,34 @@ export async function getApplicationsByJob({
     )
     .eq("job_id", jobId);
 
+  // 4. كود البحث والفلترة
   const searchQuery = query?.toString().trim();
   const statusQuery = status?.toString().trim();
   const matchQuery = match?.toString().trim();
 
-  // 🔍 search across profile fields via profile IDs first
   if (searchQuery) {
     const likeQuery = `%${searchQuery}%`;
-    const { data: matchingProfiles, error: profileError } = await supabase
+    const { data: matchingProfiles } = await supabase
       .from("profiles")
       .select("id")
       .or(
         `firstname.ilike.${likeQuery},lastname.ilike.${likeQuery},email.ilike.${likeQuery}`,
       );
 
-    if (profileError) {
-      console.error(profileError.message);
-      throw new Error(profileError.message);
+    if (matchingProfiles?.length > 0) {
+      const profileIds = matchingProfiles.map((p) => p.id);
+      supabaseQuery = supabaseQuery.in("user_id", profileIds);
+    } else {
+      return { data: [], count: 0 }; // لا توجد نتائج بحث
     }
-
-    if (!matchingProfiles || matchingProfiles.length === 0) {
-      return { data: [], count: 0 };
-    }
-
-    const profileIds = matchingProfiles.map((profile) => profile.id);
-    supabaseQuery = supabaseQuery.in("user_id", profileIds);
   }
 
-  // 🔄 status filter
   if (statusQuery && statusQuery !== "all") {
     supabaseQuery = supabaseQuery.eq("status", statusQuery);
   }
-  if (matchQuery && matchQuery !== "all") {
-    // نقوم بتقسيم النص "75-100" إلى رقمين: 75 و 100
-    const [min, max] = matchQuery.split("-").map(Number);
 
+  if (matchQuery && matchQuery !== "all") {
+    const [min, max] = matchQuery.split("-").map(Number);
     if (!isNaN(min) && !isNaN(max)) {
       supabaseQuery = supabaseQuery
         .gte("match_score", min)
@@ -388,15 +451,11 @@ export async function getApplicationsByJob({
     }
   }
 
-  // ✅ التنفيذ النهائي
   const { data, error, count } = await supabaseQuery
-    .order("match_score", { ascending: false }) // اقتراح: رتبهم حسب الدرجة الأعلى أولاً
+    .order("match_score", { ascending: false })
     .range(from, to);
 
-  if (error) {
-    console.error(error.message);
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
   return { data, count };
 }
@@ -505,54 +564,82 @@ export async function getReview(appId) {
   return data || [];
 }
 
-export async function getCandidate({ page = 1, pageSize = 10, query = "" }) {
+export async function getCandidate({
+  page = 1,
+  pageSize = 10,
+  query = "",
+  category = "all",
+}) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseWithAuth(session);
 
-  // 1. بناء الاستعلام الأساسي
-  // أضفنا !inner لضمان عدم إعادة أي مراجعة ليس لها تطبيق أو بروفايل مطابق
-  let supabaseQuery = supabase.from("applicant_reviews").select(
-    `
-      *,
-      applications (
-        *),
-       profiles!inner (*)
-    `,
-    { count: "exact" },
-  );
+  // 1. الاستعلام الأساسي - أعدنا !inner لتصفية الصفوف التي لا تملك بروفايل مطابق
+  let supabaseQuery = supabase
+    .from("applicant_reviews")
+    .select(
+      `
+    *,
+    applications (*),
+    profiles!inner (*) 
+  `,
+      { count: "exact" },
+    )
+    .eq("saved", true);
 
-  // 2. الفلترة حسب الحالة (Saved)
-  supabaseQuery = supabaseQuery.eq("saved", true);
+  const searchQuery = query?.toString().trim();
+  const categoryQuery = category?.toString().trim();
 
-  // 3. معالجة البحث (Query)
-  if (query) {
-    // إصلاح الخطأ المطبعي: أضفت فاصلة قبل email
-    // استخدام foreignTable مع الربط الداخلي !inner يضمن حذف النتائج غير المطابقة تماماً
-    supabaseQuery = supabaseQuery.or(
-      `firstname.ilike.%${query}%,lastname.ilike.%${query}%,email.ilike.%${query}%`,
-      { foreignTable: "profiles" },
-    );
+  // 2. فلترة الكاتيجوري
+  if (categoryQuery && categoryQuery !== "all") {
+    // استخدام !inner يجعل هذا السطر يحذف المراجعة بالكامل من النتائج إذا لم تكن من هذا القسم
+    supabaseQuery = supabaseQuery.eq("profiles.main_category", categoryQuery);
   }
 
-  // 4. التنفيذ والترتيب
+  // 3. البحث (searchQuery)
+  if (searchQuery) {
+    const searchTerm = searchQuery.toLowerCase().trim();
+
+    // جلب IDs البروفايلات المطابقة للبحث
+    const { data: matchingProfiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .or(
+        `firstname.ilike.%${searchTerm}%,` +
+          `lastname.ilike.%${searchTerm}%,` +
+          `email.ilike.%${searchTerm}%,` +
+          `main_category.ilike.%${searchTerm}%,` +
+          `tags.ov.{${searchTerm}}`,
+      );
+
+    if (matchingProfiles && matchingProfiles.length > 0) {
+      const profileIds = matchingProfiles.map((p) => p.id);
+      supabaseQuery = supabaseQuery.in("user_id", profileIds);
+    } else {
+      // إذا كان هناك نص بحث ولم نجد أي بروفايل، نرجع مصفوفة فارغة
+      return { data: [], count: 0 };
+    }
+  }
+
+  // 3. التنفيذ
   const { data, error, count } = await supabaseQuery
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (error) {
-    console.error("Supabase Error:", error.message);
+    console.error("Supabase Final Query Error:", error.message);
     throw new Error(error.message);
   }
 
   return { data: data || [], count: count || 0 };
 }
-
 export async function getInterviews() {
   const session = await getServerSession(authConfig);
   if (!session || session.user.role !== "admin")
     throw new Error("Unauthorized");
+  const hrId = session.user.id;
 
   const supabase = getSupabaseWithAuth(session);
 
@@ -563,9 +650,10 @@ export async function getInterviews() {
       *,
       applications (
         profiles (id, firstname, lastname)
-      )
-    `,
+        )
+        `,
     )
+    .eq("hr_user_id", hrId)
     .order("start_time", { ascending: true });
 
   if (error) throw new Error(error.message);
@@ -726,4 +814,61 @@ export async function getWeeklyApplicationStats() {
 
   // إعادة ترتيب المصفوفة لتبدأ من الاثنين وليس الأحد (اختياري حسب الرغبة)
   return stats;
+}
+
+export async function getTeamMembers(adminId) {
+  const supabase = getSupabaseAdmin(); // نستخدم نسخة الأدمن لجلب بيانات الفريق
+
+  const { data, error } = await supabase
+    .from("team_profiles")
+    .select(
+      `
+      id, 
+      email, 
+      employee_id, 
+      sub_role, 
+      created_at,
+      users:id (
+        name,
+        image
+      )
+    `,
+    )
+    .eq("managed_by", adminId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching team:", error);
+    return [];
+  }
+
+  // تنظيف البيانات لتعود بشكل مسطح (Flatten) ليسهل التعامل معها في المكونات
+  const formattedData = data.map((member) => ({
+    id: member.id,
+    email: member.email,
+    employee_id: member.employee_id,
+    sub_role: member.sub_role,
+    created_at: member.created_at,
+    name: member.users?.name || "Väntar på inloggning...", // إذا لم يسجل دخول بعد
+    image: member.users?.image || null,
+  }));
+
+  return formattedData;
+}
+
+export async function getTeamProfileInfo(id) {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  const { data, error } = await supabaseAdmin
+    .from("team_profiles")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.log(error.message);
+    return null;
+  }
+
+  return data;
 }

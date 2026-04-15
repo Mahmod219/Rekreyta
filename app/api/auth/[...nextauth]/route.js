@@ -5,18 +5,18 @@ import Google from "next-auth/providers/google";
 
 function getSupabaseToken(user) {
   const payload = {
-    // aud: "authenticated", // ضروري جداً لتعرف سوبابيس أن المستخدم مسجل دخول
-    sub: user.id, // هذا المعرف الذي سيقرأه auth.uid()
+    sub: user.id,
     email: user.email,
     app_metadata: {
-      role: user.role, // سوبابيس تفضل وجود الأدوار هنا أو في الـ user_metadata
+      role: user.role,
     },
-    role: "authenticated", // نوع الدور الأساسي في سوبابيس
-    exp: Math.floor(Date.now() / 1000) + 60 * 60, // توقيت الانتهاء (ساعة)
+    role: "authenticated",
+    exp: Math.floor(Date.now() / 1000) + 60 * 60,
   };
 
   return jwt.sign(payload, process.env.SUPABASE_JWT_SECRET);
 }
+
 export const authConfig = {
   providers: [
     Google({
@@ -32,28 +32,61 @@ export const authConfig = {
     async signIn({ user }) {
       if (!user.email) return false;
 
-      // استدعاء نسخة الآدمن كدالة ()
       const supabaseAdmin = getSupabaseAdmin();
 
-      const { data } = await supabaseAdmin
+      // 1. فحص هل الإيميل موجود في جدول الـ team_profiles (دعوة مسبقة من الأدمن)
+      const { data: teamInvitation } = await supabaseAdmin
+        .from("team_profiles")
+        .select("id")
+        .eq("email", user.email)
+        .maybeSingle();
+
+      // إذا كان موجوداً في جدول الفريق، نعطيه رول admin، وإلا رول user
+      const roleToAssign = teamInvitation ? "admin" : "user";
+
+      // 2. البحث عن المستخدم في جدول users
+      const { data: existingUser } = await supabaseAdmin
         .from("users")
         .select("id")
         .eq("email", user.email)
         .maybeSingle();
 
-      if (!data) {
-        const { error } = await supabaseAdmin.from("users").insert({
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: "user",
-        });
+      let userId = existingUser?.id;
 
-        if (error) {
-          console.error("Supabase insert error:", error);
-          return false;
+      if (!existingUser) {
+        // إنشاء مستخدم جديد
+        const { data: newUser, error: insertError } = await supabaseAdmin
+          .from("users")
+          .insert({
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: roleToAssign,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) return false;
+        userId = newUser.id;
+      } else {
+        // إذا كان المستخدم موجوداً أصلاً ولكن تم دعوته للفريق حديثاً، نحدث الرول الخاص به
+        if (existingUser.role !== roleToAssign) {
+          await supabaseAdmin
+            .from("users")
+            .update({ role: roleToAssign })
+            .eq("id", existingUser.id);
         }
       }
+
+      // 3. 🔥 الربط مع جدول team_profiles
+      // إذا كان الموظف مضافاً مسبقاً بالإيميل فقط (id كان null أو عشوائي)، نحدثه بالـ ID الحقيقي
+      if (teamInvitation) {
+        await supabaseAdmin
+          .from("team_profiles")
+          .update({ id: userId }) // نربط البروفايل بالـ id الحقيقي من جدول users
+          .eq("email", user.email);
+      }
+
       return true;
     },
 
@@ -71,7 +104,6 @@ export const authConfig = {
           token.id = data.id;
           token.role = data.role || "user";
 
-          // 🔥 هون نضيف التوكن
           token.supabaseAccessToken = getSupabaseToken({
             id: data.id,
             email: user?.email || token.email,
@@ -79,17 +111,13 @@ export const authConfig = {
           });
         }
       }
-
       return token;
     },
 
     async session({ session, token }) {
       session.user.id = token.id;
       session.user.role = token.role;
-
-      // 🔥 مهم جدًا
       session.supabaseAccessToken = token.supabaseAccessToken;
-
       return session;
     },
   },

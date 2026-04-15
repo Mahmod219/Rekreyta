@@ -6,12 +6,17 @@ import ApplyJobButton from "../ui/ApplyJobButton";
 export default async function ApplyJob({ jobId }) {
   const session = await getServerSession(authConfig);
   const userId = session?.user?.id;
+  const userEmail = session?.user?.email;
 
   const accountInfo = (await getAccountInfo(userId)) || [];
 
   return (
     <div>
-      <ApplyJobButton jobId={jobId} accountInfo={accountInfo} />
+      <ApplyJobButton
+        jobId={jobId}
+        accountInfo={accountInfo}
+        userEmail={userEmail}
+      />
     </div>
   );
 }
