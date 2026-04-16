@@ -76,7 +76,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="sv" className={inter.className}>
-      <body className="text-primary-800 bg-gray-50  min-h-screen flex flex-col antialiased relative scroll-smooth overflow-x-hidden">
+      <body className=" bg-gray-50  min-h-screen flex flex-col antialiased relative scroll-smooth overflow-x-hidden">
         <AuthProvider>
           <Header />
 
