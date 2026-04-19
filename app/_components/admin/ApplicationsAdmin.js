@@ -46,7 +46,7 @@ export default function ApplicationsAdmin({ application, rev }) {
     city,
   } = profiles;
 
-  const jobId = jobs.id;
+  const jobId = jobs?.id;
   const fullName = `${firstname} ${lastname}`;
   const location = `${address}, ${zipcode} ${city}`;
   const appliedDate = created_at
@@ -222,7 +222,7 @@ export default function ApplicationsAdmin({ application, rev }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
-                      className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-400 text-white rounded-2xl font-bold text-sm hover:bg-blue-500 transition-all cursor-pointer"
+                      className="flex items-center justify-center gap-2 py-3 px-4 bg-blue-400/90 text-white rounded-2xl font-bold text-sm hover:bg-blue-500 transition-all cursor-pointer"
                       onClick={() => setIsInterviewModalOpen(true)}
                     >
                       Boka Intervju

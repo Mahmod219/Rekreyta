@@ -30,7 +30,7 @@ export default function CreateJobForm() {
   const [state, formAction, isPending] = useActionState(addJob, {});
 
   useEffect(() => {
-    if (state?.success) toast.success("Added successfully");
+    if (state?.success) toast.success("Tillagd framgångsrikt");
     if (state?.formError) toast.error(state.formError);
   }, [state]);
 

@@ -8,6 +8,8 @@ import { AuthProvider } from "./_components/SessionProvider";
 import CookieBanner from "./_components/CookieBanner";
 import Header from "./_components/ui/Header";
 import Footer from "./_components/ui/Footer";
+import AIButton from "./_components/ui/AIButton";
+import { hasCvFile } from "./_lib/data-service";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -73,7 +75,7 @@ export const metadata = {
 //     "Rekryta is a modern job board where companies can post job openings and candidates can discover new career opportunities.",
 // };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
   return (
     <html lang="sv" className={inter.className}>
       <body className=" bg-gray-50  min-h-screen flex flex-col antialiased relative scroll-smooth overflow-x-hidden">
@@ -84,6 +86,7 @@ export default function RootLayout({ children }) {
           <div className="flex-1 w-full flex flex-col">
             {/* الـ main يجب أن يكون w-full بدون max-w هنا، لأن الـ Hero يحتاج عرض الشاشة كاملاً */}
             <main className="w-full relative">
+              <AIButton />
               {children}
               <CookieBanner />
               <Toaster position="top-center" />

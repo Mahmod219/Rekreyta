@@ -1,11 +1,12 @@
 "use server";
-
+import { pipeline } from "@xenova/transformers";
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
 
 import { addMinutes, formatISO } from "date-fns";
 import { revalidatePath } from "next/cache";
 
+import { getMatchScoreFromAI } from "./ai-actions";
 import {
   createJob,
   createNotification,
@@ -15,8 +16,6 @@ import {
 import { jobSchema } from "./schemas/jobSchema";
 import { profileSchema } from "./schemas/profileSchema";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
-import { getMatchScoreFromAI } from "./ai-actions";
-import { redirect } from "next/navigation";
 
 // حل سحري لمشكلة DOMMatrix و Canvas في بيئة السيرفر
 if (typeof global.DOMMatrix === "undefined") {
@@ -44,6 +43,33 @@ if (typeof global.Path2D === "undefined") {
   };
 }
 
+async function generateEmbedding(text) {
+  try {
+    console.log("🔄 Generating embedding locally...");
+
+    // إنشاء الـ Pipeline (يتم تحميل الموديل مرة واحدة فقط عند أول طلب)
+    const extractor = await pipeline(
+      "feature-extraction",
+      "Xenova/all-MiniLM-L6-v2",
+    );
+
+    // توليد المتجهات
+    const output = await extractor(text, { pooling: "mean", normalize: true });
+
+    // تحويل النتيجة إلى مصفوفة أرقام عادية (Array)
+    const embedding = Array.from(output.data);
+
+    console.log(
+      "✅ Local embedding generated successfully! Size:",
+      embedding.length,
+    );
+    return embedding;
+  } catch (err) {
+    console.error("❌ Local Embedding Error:", err.message);
+    return null;
+  }
+}
+
 export async function addJob(prevState, formData) {
   const session = await getServerSession(authConfig);
   const supabaseAdmin = getSupabaseAdmin();
@@ -63,6 +89,8 @@ export async function addJob(prevState, formData) {
       fieldErrors: result.error.flatten().fieldErrors,
     };
   }
+
+  const jobDesc = data.description;
 
   let imageUrl = null;
   let filePath = null;
@@ -89,12 +117,32 @@ export async function addJob(prevState, formData) {
     }
 
     // ✅ حفظ في الداتابيس
-    await createJob({
+    const newJob = await createJob({
       ...result.data,
       image_url: imageUrl,
       image_path: filePath,
       created_by: session.user.id,
     });
+
+    const jobId = newJob?.id;
+
+    try {
+      if (jobDesc && jobId) {
+        const embedding = await generateEmbedding(jobDesc);
+
+        if (embedding) {
+          const { error: embErr } = await supabaseAdmin // استخدم supabaseAdmin لضمان الصلاحيات
+            .from("jobs")
+            .update({ job_embedding: embedding })
+            .eq("id", jobId); // ✅ التحديث بناءً على ID الوظيفة الحالية فقط
+
+          if (embErr) console.error("Database Update Error:", embErr.message);
+          else console.log("✅ Embedding success for Job ID:", jobId);
+        }
+      }
+    } catch (innerErr) {
+      console.error("Embedding Process Error:", innerErr.message);
+    }
 
     revalidatePath("/admin/joboffers");
 
@@ -184,6 +232,8 @@ export async function updateJob(prevState, formData) {
     return { fieldErrors: result.error.flatten().fieldErrors };
   }
 
+  const jobDesc = data.description;
+
   try {
     let updateData = { ...result.data };
 
@@ -228,6 +278,24 @@ export async function updateJob(prevState, formData) {
       .eq("id", jobofferId);
 
     if (error) throw error;
+
+    try {
+      if (jobDesc) {
+        const embedding = await generateEmbedding(jobDesc);
+
+        if (embedding) {
+          const { error: embErr } = await supabaseAdmin
+            .from("jobs")
+            .update({ job_embedding: embedding })
+            .eq("id", jobofferId);
+
+          if (embErr) console.error("Database Update Error:", embErr.message);
+        }
+      }
+    } catch (innerErr) {
+      console.error("Embedding Process Error:", innerErr.message);
+      // ملاحظة: لا نوقف العملية كاملة إذا فشل الـ Embedding فقط لكي لا يخسر المستخدم بياناته الأخرى
+    }
 
     revalidatePath("/admin/joboffers");
     return { success: true };
@@ -350,6 +418,8 @@ export async function profileInfo(prevState, formData) {
 
   const userId = session.user.id;
 
+  // extract text from pdf
+
   try {
     if (cv_file && cv_file.size > 0) {
       const cvFileName = `${userId}/${Date.now()}-${cv_file.name}`;
@@ -403,6 +473,58 @@ export async function profileInfo(prevState, formData) {
       .upsert(updatePayload, { onConflict: "id" });
 
     if (dbError) throw dbError;
+    try {
+      let resumeText = "";
+      const PDFParser = require("pdf2json");
+      const pdfParser = new PDFParser(null, 1);
+
+      let pdfBuffer = null;
+
+      // 1. الحصول على الـ Buffer
+      if (cv_file && cv_file.size > 0) {
+        pdfBuffer = Buffer.from(await cv_file.arrayBuffer());
+      } else if (updatePayload.cv_url) {
+        const response = await fetch(updatePayload.cv_url);
+        pdfBuffer = Buffer.from(await response.arrayBuffer());
+      }
+
+      if (pdfBuffer) {
+        resumeText = await new Promise((resolve, reject) => {
+          pdfParser.on("pdfParser_dataError", (errData) =>
+            reject(errData.parserError),
+          );
+          pdfParser.on("pdfParser_dataReady", () => {
+            resolve(pdfParser.getRawTextContent());
+          });
+          pdfParser.parseBuffer(pdfBuffer);
+        });
+
+        // 2. تنظيف النص (إزالة المسافات الزائدة والسطور الفارغة لتقليل التكلفة)
+        const cleanedText = resumeText
+          .replace(/\s+/g, " ")
+          .trim()
+          .substring(0, 10000); // نأخذ أول 10 آلاف حرف لضمان عدم تجاوز حدود الـ API
+
+        if (cleanedText) {
+          // 3. توليد الـ Embedding (تأكد من وجود هذه الدالة لديك)
+          const embedding = await generateEmbedding(cleanedText);
+
+          if (embedding) {
+            const { error: embedError } = await supabase
+              .from("profiles")
+              .update({ cv_embedding: embedding })
+              .eq("id", userId);
+
+            if (embedError)
+              console.error("Database Update Error:", embedError.message);
+            else console.log("✅ Embedding success for user:", userId);
+          }
+        }
+      }
+    } catch (innerErr) {
+      console.error("Embedding Process Error:", innerErr.message);
+      // ملاحظة: لا نوقف العملية كاملة إذا فشل الـ Embedding فقط لكي لا يخسر المستخدم بياناته الأخرى
+    }
 
     revalidatePath("/account/info");
     return { success: true };
@@ -533,9 +655,6 @@ export async function applyToJobb(prevState, formData) {
           });
           pdfParser.parseBuffer(pdfBuffer);
         });
-
-        console.log(resumeText);
-        console.log("--- ✅ النص استخرج بنجاح باستخدام pdf2json ---");
       }
 
       // 5. إرسال النص للـ AI
@@ -546,7 +665,6 @@ export async function applyToJobb(prevState, formData) {
         );
         matchScore = aiResult.score || 0;
         aiAnalysis = aiResult.reason || "";
-        console.log(`--- AI SUCCESS --- Score: ${matchScore}%`);
       }
     } catch (pdfError) {
       console.error("PDF/AI Logic Error:", pdfError);
@@ -659,49 +777,56 @@ export async function applyToJobb(prevState, formData) {
 export async function updateApplicationStatus(applicationId, jobId, newStatus) {
   const session = await getServerSession(authConfig);
   const supabaseAdmin = getSupabaseAdmin();
-  if (!session) return { formError: "Du måste vara inloggad" };
 
-  const { data: job, error: jobError } = await supabaseAdmin
-    .from("jobs")
-    .select("title")
-    .eq("id", jobId)
-    .single();
+  if (!session) throw new Error("Du måste vara inloggad");
 
-  if (jobError) {
-    console.log("Error fetching job:", jobError.message);
-    throw new Error("Kunde inte hitta jobbet");
+  console.log("Updating ID:", applicationId, "New Status:", newStatus); // للـ Debug
+
+  // 1. جلب بيانات الوظيفة والطلب (يمكن دمجهما لسرعة الأداء)
+  const [
+    { data: job, error: jobError },
+    { data: application, error: appError },
+  ] = await Promise.all([
+    supabaseAdmin.from("jobs").select("title").eq("id", jobId).single(),
+    supabaseAdmin
+      .from("applications")
+      .select("user_id")
+      .eq("id", applicationId)
+      .single(),
+  ]);
+
+  if (jobError || appError) {
+    console.error("Fetch Error:", jobError || appError);
+    throw new Error("Kunde inte hitta data för ansökan");
   }
 
-  const { data: application, error: applicationError } = await supabaseAdmin
+  // 2. عملية التحديث الفعلية
+  const { error: updateError } = await supabaseAdmin
     .from("applications")
-    .select("user_id")
-    .eq("id", applicationId)
-    .single();
-
-  if (applicationError) {
-    console.log("Error fetching application:", applicationError.message);
-    throw new Error("Kunde inte hitta ansökan");
-  }
-
-  const { error } = await supabaseAdmin
-    .from("applications")
-    .update({ status: newStatus })
+    .update({ status: newStatus }) // تأكد أن الاسم في الداتابيز هو status
     .eq("id", applicationId);
 
-  if (error) {
-    console.log("Error updating status:", error.message);
-    throw new Error("Kunde inte uppdatera appens status");
+  if (updateError) {
+    console.error("Supabase Update Error:", updateError); // هذا سيخبرك بالسبب الحقيقي
+    throw new Error(`Update failed: ${updateError.message}`);
   }
 
-  await createNotification({
-    user_id: application?.user_id,
-    title: "Statusuppdatering",
-    message: `Din ansökan till ${job?.title || "jobbet"} status uppdaterad till ${newStatus}`,
-    type: "status",
-    link: `/account/applications`,
-  });
+  // 3. إرسال الإشعار
+  try {
+    await createNotification({
+      user_id: application.user_id,
+      title: "Statusuppdatering",
+      message: `Din ansökan till ${job.title} har uppdaterats till: ${newStatus}`,
+      type: "status",
+      link: `/account/applications`,
+    });
+  } catch (notifError) {
+    console.error("Notification failed but status updated:", notifError);
+    // لا نرمي خطأ هنا لكي لا يتوقف التحديث إذا فشل الإشعار فقط
+  }
 
   revalidatePath(`/admin/applications/${jobId}`);
+  return { success: true };
 }
 
 export async function markNotificationAsRead(notificationId) {

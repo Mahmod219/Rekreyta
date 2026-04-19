@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
+import { is } from "zod/locales";
 
 export async function getJobs({
   query = "",
@@ -393,23 +394,28 @@ export async function getApplicationsByJob({
     .from("applications")
     .select(
       `
-      id,
+          id,
       status,
       created_at,
       another_url,
       cv_url,
       coverletter,
-      match_score,
-      ai_analysis,
+
+      jobs (
+        id,
+        title,
+        company
+      ),
+
       profiles (
         id,
         firstname,
         lastname,
         email,
-        phone,
-        address,
+         phone,
+         address,
         zipcode,
-        city
+       city
       )
     `,
       { count: "exact" },
@@ -465,28 +471,28 @@ export async function getApplicationsByJob({
 //     .from("applications")
 //     .select(
 //       `
-//       id,
-//       status,
-//       created_at,
-//       another_url,
-//       cv_url,
-//       coverletter,
+// id,
+// status,
+// created_at,
+// another_url,
+// cv_url,
+// coverletter,
 
-//       jobs (
-//         id,
-//         title,
-//         company
-//       ),
+// jobs (
+//   id,
+//   title,
+//   company
+// ),
 
-//       profiles (
-//         id,
-//         firstname,
-//         lastname,
-//         email,
-//          phone,
-//          address,
-//         zipcode,
-//        city
+// profiles (
+//   id,
+//   firstname,
+//   lastname,
+//   email,
+//    phone,
+//    address,
+//   zipcode,
+//  city
 //       )
 //     `,
 //     )
@@ -546,6 +552,67 @@ export default async function getSavedJob(userId) {
     return [];
   }
   return data;
+}
+
+export async function getAiMatchedJobs() {
+  try {
+    const session = await getServerSession(authConfig);
+    const userId = session?.user?.id;
+
+    if (!userId) return []; // حماية إضافية إذا لم تكن هناك جلسة
+
+    const supabase = getSupabaseWithAuth(session);
+
+    // 1. جلب الـ Vector الخاص بالمستخدم
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("cv_embedding")
+      .eq("id", userId)
+      .maybeSingle(); // استخدام maybeSingle أفضل لتجنب أخطاء single() إذا كان البروفايل غير موجود
+
+    if (profileError || !profile?.cv_embedding) {
+      console.log("No embedding found for user:", userId);
+      return [];
+    }
+
+    // 2. مناداة الـ RPC للحصول على الوظائف المطابقة
+    const { data: matchedJobs, error: rpcError } = await supabase.rpc(
+      "get_matching_jobs",
+      {
+        user_cv_embedding: profile.cv_embedding,
+        match_threshold: 0.3,
+        match_count: 20,
+      },
+    );
+
+    if (rpcError) {
+      console.error("RPC Error:", rpcError.message);
+      return [];
+    }
+
+    return matchedJobs || [];
+  } catch (error) {
+    console.error("Unexpected error in getAiMatchedJobs:", error);
+    return [];
+  }
+}
+
+export async function hasCvFile() {
+  const session = await getServerSession(authConfig);
+  const supabase = getSupabaseWithAuth(session);
+
+  const userId = session?.user?.id;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("cv_url")
+    .eq("id", userId);
+
+  if (error) {
+    console.log("could not get cv", error);
+  }
+
+  return data || [];
 }
 
 export async function getReview(appId) {
@@ -663,11 +730,42 @@ export async function getInterviews() {
 export async function getExpairedJobs() {
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseAdmin(session);
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("published", true)
-    .eq("application_deadline", new Date().toISOString().split("T")[0]);
+  const userId = session?.user?.id;
+
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+  const createBaseQuery = () => {
+    let q = supabase.from("jobs").select("*");
+
+    if (isStaff) {
+      q = q.eq("created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("created_by", fullAccess);
+    }
+    return q;
+  };
+  const { data, error } = await createBaseQuery().eq(
+    "application_deadline",
+    new Date().toISOString().split("T")[0],
+  );
   if (error) {
     throw new Error(error.message);
   }
@@ -678,15 +776,46 @@ export async function getStaleInterViews() {
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseWithAuth(session);
 
+  const userId = session?.user?.id;
+
   const sevsenDaysAgo = new Date();
   sevsenDaysAgo.setDate(sevsenDaysAgo.getDate() - 7);
 
-  const { data, error } = await supabase
-    .from("interviews")
-    .select(
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+
+  const createBaseQuery = () => {
+    let q = supabase.from("interviews").select(
       `id, start_time,
-      applications(id, job_id, status, profiles(firstname, lastname, email))`,
-    )
+      applications!inner(id, job_id, status, profiles(firstname, lastname, email), jobs!inner(created_by))`,
+    );
+    if (isStaff) {
+      q = q.eq("applications.jobs.created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("applications.jobs.created_by", fullAccess);
+    }
+    return q;
+  };
+
+  const { data, error } = await createBaseQuery()
     .lte("start_time", sevsenDaysAgo.toISOString())
     .eq("applications.status", "intervju");
   if (error) {
@@ -698,12 +827,44 @@ export async function getStaleInterViews() {
 export async function getTopJobs() {
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseWithAuth(session);
+  const userId = session?.user?.id;
+
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+
+  const createBaseQuery = () => {
+    let q = supabase
+      .from("jobs")
+      .select(`id, title, company, applications(count)`);
+
+    if (isStaff) {
+      q = q.eq("created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("created_by", fullAccess);
+    }
+    return q;
+  };
 
   // 1. نجلب الوظائف مع العد
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(`id, title, company, applications(count)`)
-    .eq("published", true);
+  const { data, error } = await createBaseQuery();
 
   if (error) throw new Error(error.message);
 
@@ -721,12 +882,44 @@ export async function getTopJobs() {
 export async function getBottomJobs() {
   const session = await getServerSession(authConfig);
   const supabase = getSupabaseWithAuth(session);
+  const userId = session?.user?.id;
+
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+
+  const createBaseQuery = () => {
+    let q = supabase
+      .from("jobs")
+      .select(`id, title, company, applications(count)`);
+
+    if (isStaff) {
+      q = q.eq("created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("created_by", fullAccess);
+    }
+    return q;
+  };
 
   // 1. نجلب الوظائف مع العد
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(`id, title, company, applications(count)`)
-    .eq("published", true);
+  const { data, error } = await createBaseQuery();
 
   if (error) throw new Error(error.message);
 
@@ -743,19 +936,54 @@ export async function getBottomJobs() {
 }
 
 export async function getJobsStatusCount() {
+  const session = await getServerSession(authConfig);
+  const userId = session?.user?.id;
   const supabase = getSupabaseAdmin();
 
-  // 1. جلب عدد الوظائف المنشورة (True)
-  const { count: published, error: error1 } = await supabase
-    .from("jobs")
-    .select("*", { count: "exact", head: true })
-    .eq("published", true);
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
 
-  // 2. جلب عدد الوظائف غير المنشورة (False / Drafts)
-  const { count: drafts, error: error2 } = await supabase
-    .from("jobs")
-    .select("*", { count: "exact", head: true })
-    .eq("published", false);
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+
+  // دالة مساعدة لإنشاء استعلام جديد في كل مرة لتجنب التضارب
+  const createBaseQuery = () => {
+    let q = supabase.from("jobs").select("*", { count: "exact", head: true });
+
+    if (isStaff) {
+      q = q.eq("created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("created_by", fullAccess);
+    }
+    return q;
+  };
+
+  // 1. جلب عدد الوظائف المنشورة - ننشئ استعلام مستقل
+  const { count: published, error: error1 } = await createBaseQuery().eq(
+    "published",
+    true,
+  );
+
+  // 2. جلب عدد الوظائف غير المنشورة - ننشئ استعلام مستقل آخر
+  const { count: drafts, error: error2 } = await createBaseQuery().eq(
+    "published",
+    false,
+  );
 
   if (error1 || error2) throw new Error("Kunne inte hämta jobbstatistik");
 
@@ -770,12 +998,56 @@ export async function getJobsStatusCount() {
 
 export async function getTotalApplications() {
   const session = await getServerSession(authConfig);
+  // تأكد من تعريف userId هنا
+  const userId = session?.user?.id;
+
+  if (!userId) return [];
+
   const supabase = getSupabaseWithAuth(session);
 
-  const { data, error } = await supabase.from("applications").select("status");
+  // 1. تحديد صلاحيات المستخدم (Staff أم Admin)
+  const { data: teamProfile } = await supabase
+    .from("team_profiles")
+    .select("managed_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const isStaff = !!teamProfile?.managed_by;
+  let staffIds = [];
+
+  if (!isStaff) {
+    const { data: staffMembers } = await supabase
+      .from("team_profiles")
+      .select("id")
+      .eq("managed_by", userId);
+
+    if (staffMembers) {
+      staffIds = staffMembers.map((m) => m.id);
+    }
+  }
+
+  // 2. بناء الاستعلام مع استخدام !inner للفلترة الحقيقية
+  const createBaseQuery = () => {
+    // استخدم !inner لإخبار سوبابيس بضرورة وجود علاقة مطابقة تماماً
+    let q = supabase.from("applications").select(`
+        status, 
+        jobs!inner(created_by)
+      `);
+
+    if (isStaff) {
+      q = q.eq("jobs.created_by", userId);
+    } else {
+      const fullAccess = [userId, ...staffIds];
+      q = q.in("jobs.created_by", fullAccess);
+    }
+    return q;
+  };
+
+  const { data, error } = await createBaseQuery();
 
   if (error) {
-    throw new Error(error.message);
+    console.error("Error fetching applications:", error);
+    throw new Error("Kunne inte hämta ansökningar");
   }
 
   return data || [];
