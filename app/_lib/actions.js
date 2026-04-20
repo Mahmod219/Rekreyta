@@ -1,6 +1,8 @@
 "use server";
 
 import { env } from "@xenova/transformers";
+import { getServerSession } from "next-auth";
+import { authConfig } from "../api/auth/[...nextauth]/route";
 
 // إخبار المكتبة بعدم البحث عن ملفات النظام المحلية واستخدام WASM
 env.allowLocalModels = false;
@@ -10,9 +12,6 @@ env.useBrowserCache = false;
 env.backends.onnx.wasm.proxy = false;
 env.backends.onnx.wasm.wasmPaths =
   "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/";
-import { pipeline } from "@xenova/transformers";
-import { getServerSession } from "next-auth";
-import { authConfig } from "../api/auth/[...nextauth]/route";
 
 import { addMinutes, formatISO } from "date-fns";
 import { revalidatePath } from "next/cache";
@@ -28,34 +27,11 @@ import { jobSchema } from "./schemas/jobSchema";
 import { profileSchema } from "./schemas/profileSchema";
 import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
 
-// حل سحري لمشكلة DOMMatrix و Canvas في بيئة السيرفر
-if (typeof global.DOMMatrix === "undefined") {
-  global.DOMMatrix = class DOMMatrix {
-    constructor() {
-      this.m11 = 1;
-      this.m22 = 1;
-      this.m33 = 1;
-      this.m44 = 1;
-    }
-  };
-}
-if (typeof global.ImageData === "undefined") {
-  global.ImageData = class ImageData {
-    constructor() {
-      return {};
-    }
-  };
-}
-
-if (typeof global.Path2D === "undefined") {
-  global.Path2D = class Path2D {
-    constructor() {}
-    addPath() {}
-  };
-}
-
-async function generateEmbedding(text) {
+export async function generateEmbedding(text) {
   try {
+    // التأكد من وجود نص لمعالجته
+    if (!text) return null;
+
     console.log("🔄 Generating embedding via Hugging Face API...");
 
     const response = await fetch(
@@ -71,18 +47,23 @@ async function generateEmbedding(text) {
     );
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Hugging Face API Error Details:", errorData);
       throw new Error(`API Error: ${response.statusText}`);
     }
 
     const embedding = await response.json();
 
-    console.log(
-      "✅ AI Embedding generated successfully! Size:",
-      embedding.length,
-    );
-    return embedding;
+    // التحقق من أن النتيجة مصفوفة أرقام (Array) كما يتوقع سوبابيس
+    if (Array.isArray(embedding)) {
+      console.log("✅ AI Embedding generated successfully!");
+      return embedding;
+    } else {
+      console.error("❌ Unexpected response format from AI API");
+      return null;
+    }
   } catch (err) {
-    console.error("❌ Embedding Error:", err.message);
+    console.error("❌ Embedding Process Failed:", err.message);
     return null;
   }
 }
