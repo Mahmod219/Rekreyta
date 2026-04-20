@@ -45,7 +45,7 @@ export default function AIButton() {
       </button>
 
       {/* التسمية (Tooltip) - تظهر بجانب الروبوت */}
-      <div className="absolute right-full mr-3 top-1 -translate-y-1/2 hidden md:block opacity-100 transition-all duration-300 pointer-events-none">
+      <div className="absolute right-full mr-3 top-1 -translate-y-1/2  block opacity-100 transition-all duration-300 pointer-events-none">
         <div className="bg-[#2d2e3e] text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-xl border border-white/10 relative">
           Visa AI-matchningar
           {/* سهم صغير للـ Tooltip */}
