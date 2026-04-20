@@ -33,7 +33,7 @@ export default async function Page() {
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
             Din <span className="text-[#2ecc91]">Karriär</span>,{" "}
             <br className="md:hidden" />
-            Smartare än nåگonsin
+            Smartare än någonsin
           </h1>
 
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">

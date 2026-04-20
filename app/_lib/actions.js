@@ -1,4 +1,15 @@
 "use server";
+
+import { env } from "@xenova/transformers";
+
+// إخبار المكتبة بعدم البحث عن ملفات النظام المحلية واستخدام WASM
+env.allowLocalModels = false;
+env.useBrowserCache = false;
+
+// هذا السطر هو الأهم لحل مشكلة libonnxruntime
+env.backends.onnx.wasm.proxy = false;
+env.backends.onnx.wasm.wasmPaths =
+  "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/";
 import { pipeline } from "@xenova/transformers";
 import { getServerSession } from "next-auth";
 import { authConfig } from "../api/auth/[...nextauth]/route";
