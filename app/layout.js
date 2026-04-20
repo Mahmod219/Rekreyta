@@ -19,38 +19,48 @@ const inter = Inter({
 export const metadata = {
   title: {
     template: "%s | Rekreyta",
-    default: "Rekreyta - Hitta lediga jobb i Sverige",
+    default: "Rekreyta - AI-driven jobbmatchning i Sverige",
   },
   description:
-    "Rekreyta är den moderna plattformen för att hitta ditt nästa jobb i Sverige. Enkel ansökan och de bästa karriärmöjligheterna.",
+    "Hitta ditt nästa jobb med hjälp av AI. Rekreyta matchar din kompetens med de bästa karriärmöjligheterna i Sverige genom avancerad smart teknik.",
   keywords: [
+    "AI jobbmatchning", // كلمة مفتاحية قوية
     "jobb",
     "lediga tjänster",
     "karriär",
-    "rekrytering",
-    "Sverige",
+    "rekrytering Sverige",
     "Rekreyta",
-    "arbete",
+    "smart rekrytering",
+    "artificiell intelligens jobb",
   ],
   authors: [{ name: "Rekreyta Team" }],
   creator: "Rekreyta",
-  metadataBase: new URL("https://rekreyta.se"), // رابط موقعك المستقبلي
+  metadataBase: new URL("https://rekreyta.vercel.app/"),
 
   openGraph: {
-    title: "Rekreyta - Din väg till ett nytt jobb",
-    description: "Hitta de senaste lediga tjänsterna i Sverige på Rekreyta.",
-    url: "https://rekreyta.se",
+    title: "Rekreyta - Framtidens rekrytering med AI",
+    description:
+      "Låt vår AI hitta ditt nästa drömjobb. Upplev smartare jobbmatchning på Rekreyta.",
+    url: "https://rekreyta.vercel.app/",
     siteName: "Rekreyta",
-    locale: "sv_SE", // مهم جداً لجوجل السويدي
+    locale: "sv_SE",
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.png", // تأكد من وضع صورة بهذا الاسم في مجلد public
         width: 1200,
         height: 630,
-        alt: "Rekreyta - Hitta jobb i Sverige",
+        alt: "Rekreyta - AI-driven jobbplattform",
       },
     ],
+  },
+
+  twitter: {
+    // أضفت لك تويتر أيضاً لضمان ظهور الرابط بشكل جميل هناك
+    card: "summary_large_image",
+    title: "Rekreyta - AI-driven jobbmatchning",
+    description: "Hitta jobb i Sverige smartare med AI.",
+    images: ["/og-image.png"],
   },
 
   robots: {
