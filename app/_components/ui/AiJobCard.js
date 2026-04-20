@@ -50,41 +50,35 @@ export default async function AiJobCard({ job }) {
 
   // تحديد ألوان الـ AI Badge بناءً على النسبة
   const getMatchStyles = (percent) => {
-    if (percent >= 80) return "bg-[#2ecc91] text-white ";
-    if (percent >= 50) return "bg-blue-500 text-white ";
-    return "bg-orange-500 text-white ";
+    if (percent >= 80) return "border-[#2ecc91] text-[#2ecc91] bg-[#2ecc91]/5";
+    if (percent >= 50) return "border-blue-500 text-blue-500 bg-blue-50/50";
+    return "border-orange-500 text-orange-500 bg-orange-50/50";
   };
 
   return (
     <div className="group relative rounded-3xl border border-gray-300/50 bg-white p-5 md:p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#2ecc91]/30 w-full overflow-hidden">
       {/* 1. AI Match Badge - المميز لهذه البطاقة */}
+      {/* 1. AI Match Circle - تصميم الدائرة المختصر */}
       <div
         className={`
-    absolute top-3 right-3 md:top-4 md:right-4 z-10
-    flex items-center gap-1 md:gap-1.5
-    px-2 py-1 md:px-3 md:py-1.5
-    rounded-full
-    
-    /* Responsive Text Size */
-    text-[9px] md:text-sm
-    font-bold uppercase tracking-tighter
-    
-    /* Design & FX */
-     border-b-2
-    transition-all duration-300
-    group-hover:scale-105 group-hover:shadow-green-200/50
-    
-    /* Entry Animation (Fade in & Slide down) */
-    animate-fade-in-down
-    
-    ${getMatchStyles(matchPercentage)}
-  `}
+        absolute top-4 right-4 z-10
+        flex items-center justify-center
+        /* الحجم: صغير على الموبايل وأكبر قليلاً على الديسك توب */
+        h-10 w-10 md:h-12 md:w-12
+        rounded-full border-2
+        shadow-sm backdrop-blur-sm
+        transition-all duration-500
+        group-hover:rotate-360 group-hover:scale-110
+        ${getMatchStyles(matchPercentage)}
+      `}
       >
-        {/* أيقونة أصغر على الموبايل */}
-        <SparklesIcon className="h-3 w-3 md:h-4 md:w-4 animate-pulse shrink-0" />
-
-        {/* نص مختصر على الموبايل جداً إذا لزم الأمر، لكن هنا سنعتمد تغيير الحجم */}
-        <span className="whitespace-nowrap">{matchPercentage}% AI Match</span>
+        <div className="flex flex-col items-center justify-center leading-none">
+          <span className="text-[11px] md:text-sm font-black">
+            {matchPercentage}%
+          </span>
+          {/* أيقونة صغيرة جداً للإشارة للذكاء الاصطناعي */}
+          <SparklesIcon className="h-2 w-2 md:h-2.5 md:w-2.5 mt-0.5 opacity-70" />
+        </div>
       </div>
 
       {/* Ribbon for New or Deadline */}

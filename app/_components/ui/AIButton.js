@@ -39,13 +39,13 @@ export default function AIButton() {
           e.stopPropagation(); // منع الانتقال للمسار عند الضغط على X
           setIsDismissed(true);
         }}
-        className="absolute top-0 -left-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 shadow-lg"
+        className="absolute top-0 -left-2 bg-red-500 text-white rounded-full p-1 opacity-100 transition-opacity duration-300 z-10 shadow-lg"
       >
         <XMarkIcon className="h-3 w-3 md:h-4 md:w-4" />
       </button>
 
       {/* التسمية (Tooltip) - تظهر بجانب الروبوت */}
-      <div className="absolute right-full mr-3 top-1 -translate-y-1/2 hidden md:block opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+      <div className="absolute right-full mr-3 top-1 -translate-y-1/2 hidden md:block opacity-100 transition-all duration-300 pointer-events-none">
         <div className="bg-[#2d2e3e] text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap shadow-xl border border-white/10 relative">
           Visa AI-matchningar
           {/* سهم صغير للـ Tooltip */}
