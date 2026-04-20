@@ -56,27 +56,33 @@ if (typeof global.Path2D === "undefined") {
 
 async function generateEmbedding(text) {
   try {
-    console.log("🔄 Generating embedding locally...");
+    console.log("🔄 Generating embedding via Hugging Face API...");
 
-    // إنشاء الـ Pipeline (يتم تحميل الموديل مرة واحدة فقط عند أول طلب)
-    const extractor = await pipeline(
-      "feature-extraction",
-      "Xenova/all-MiniLM-L6-v2",
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({ inputs: text }),
+      },
     );
 
-    // توليد المتجهات
-    const output = await extractor(text, { pooling: "mean", normalize: true });
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
 
-    // تحويل النتيجة إلى مصفوفة أرقام عادية (Array)
-    const embedding = Array.from(output.data);
+    const embedding = await response.json();
 
     console.log(
-      "✅ Local embedding generated successfully! Size:",
+      "✅ AI Embedding generated successfully! Size:",
       embedding.length,
     );
     return embedding;
   } catch (err) {
-    console.error("❌ Local Embedding Error:", err.message);
+    console.error("❌ Embedding Error:", err.message);
     return null;
   }
 }
