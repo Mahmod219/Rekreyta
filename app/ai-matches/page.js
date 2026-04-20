@@ -1,9 +1,18 @@
-import { SparklesIcon } from "@heroicons/react/24/outline"; // تأكد من استيراد الأيقونات
+export const dynamic = "force-dynamic"; // السطر الأهم لحل مشكلة الـ Build
+
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import AiJobCard from "../_components/ui/AiJobCard";
 import { getAiMatchedJobs } from "../_lib/data-service";
 
 export default async function Page() {
-  const aiJobs = await getAiMatchedJobs();
+  // إضافة try-catch لضمان عدم انهيار الصفحة إذا فشل الـ AI Action
+  let aiJobs = [];
+  try {
+    aiJobs = await getAiMatchedJobs();
+  } catch (error) {
+    console.error("Error fetching AI jobs:", error);
+    // يمكنك هنا عرض رسالة خطأ بسيطة للمستخدم أو ترك المصفوفة فارغة
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
@@ -24,7 +33,7 @@ export default async function Page() {
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
             Din <span className="text-[#2ecc91]">Karriär</span>,{" "}
             <br className="md:hidden" />
-            Smartare än någonsin
+            Smartare än nåگonsin
           </h1>
 
           <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
@@ -36,15 +45,14 @@ export default async function Page() {
 
       {/* 2. Jobs Grid Section */}
       <div className="container mx-auto px-6 pb-20">
-        {aiJobs.length > 0 ? (
+        {aiJobs?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
-            {/* عرض شغلتين فقط بالعرض في الشاشات الكبيرة كما طلبت */}
             {aiJobs.map((job) => (
               <AiJobCard key={job.id} job={job} />
             ))}
           </div>
         ) : (
-          /* حالة عدم وجود وظائف */
+          /* حالة عدم وجود وظائف أو فشل التحميل */
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-gray-300 max-w-2xl mx-auto">
             <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <SparklesIcon className="h-10 w-10 text-gray-300" />

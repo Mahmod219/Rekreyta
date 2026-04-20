@@ -1,3 +1,5 @@
+"use server";
+
 export async function getMatchScoreFromAI(resumeText, jobDescription) {
   const apiKey = process.env.GROQ_API_KEY;
 
