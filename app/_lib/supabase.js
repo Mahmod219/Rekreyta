@@ -1,39 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
+// في ملف supabase.js القديم
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-// التحقق من وجود القيم لضمان عدم حدوث أخطاء مفاجئة
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+export async function getSupabaseWithAuth() {
+  // بدلاً من انتظار التوكن من السيشن، سنقرأ الكوكيز مباشرة
+  // هذه هي الطريقة الأضمن في نيكست 15
+  const cookieStore = await cookies();
 
-// 1. العميل العام (للمتصفح والعمليات العادية التي تخضع للـ RLS)
-// هذا العميل آمن للاستخدام في أي مكان (Client/Server)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// 2. العميل "الخارق" (للعمليات الإدارية فقط)
-// أضفنا فحصاً بسيطاً للتأكد من أنه لا يعمل إلا على السيرفر
-export const getSupabaseAdmin = () => {
-  if (typeof window !== "undefined") {
-    throw new Error("خطأ أمني: لا تحاول استخدام مفتاح الـ Admin في المتصفح!");
-  }
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-};
-export function getSupabaseWithAuth(session) {
-  if (!session?.supabaseAccessToken) {
-    throw new Error("No Supabase access token");
-  }
-
-  return createClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
-      global: {
-        headers: {
-          Authorization: `Bearer ${session.supabaseAccessToken}`,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            /* تجاهل الخطأ في الـ Server Components */
+          }
         },
       },
     },
