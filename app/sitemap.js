@@ -1,7 +1,7 @@
 import { supabase } from "@/app/_lib/supabase";
 
 export default async function sitemap() {
-  const baseUrl = "https://rekreyta.se";
+  const baseUrl = "https://rekreyta.vercel.app/";
 
   // 1. جلب كل الوظائف من قاعدة البيانات لإنشاء روابط ديناميكية لها
   const { data: jobs } = await supabase.from("jobs").select("id, updated_at");
