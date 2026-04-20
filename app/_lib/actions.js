@@ -392,7 +392,10 @@ export async function savedJob(jobId) {
     revalidatePath("/jobs");
     return { success: true, action: "removed" };
   }
-
+  console.log(
+    "SESSION TOKEN:",
+    session?.supabaseAccessToken ? "EXISTS" : "MISSING",
+  );
   // ب: إذا لم تكن موجودة -> قم بإضافتها
   const { error: insertError } = await supabase
     .from("savedJobs")

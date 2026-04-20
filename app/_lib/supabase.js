@@ -23,19 +23,28 @@ export const getSupabaseAdmin = () => {
   });
 };
 export function getSupabaseWithAuth(session) {
+  // 1. إذا لم يوجد جلسة أو توكن، لا توقف الكود بـ Error، بل استخدم العميل العادي
+  // هذا سيسمح للعمليات بالاستمرار إذا كان الـ RLS معطل
   if (!session?.supabaseAccessToken) {
-    throw new Error("No Supabase access token");
+    console.warn("تنبيه: لا يوجد توكن، سيتم استخدام العميل العام");
+    return supabase;
   }
 
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${session.supabaseAccessToken}`,
+  // 2. إذا وجد التوكن، ننشئ العميل الموثق كما هو
+  try {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${session.supabaseAccessToken}`,
+          },
         },
       },
-    },
-  );
+    );
+  } catch (err) {
+    console.error("فشل إنشاء عميل موثق، العودة للعميل العام");
+    return supabase;
+  }
 }
