@@ -41,7 +41,6 @@ export default async function JobListApplicatinAdmin({ searchParams }) {
   });
 
   const totalPages = Math.ceil(count / pageSize);
-  const showPagination = totalPages > 1;
 
   return (
     <div>
@@ -60,9 +59,8 @@ export default async function JobListApplicatinAdmin({ searchParams }) {
           </p>
         )}
       </div>
-      {showPagination && (
-        <PaginationControls currentPage={page} totalPages={totalPages} />
-      )}
+
+      <PaginationControls currentPage={page} totalPages={totalPages} />
     </div>
   );
 }

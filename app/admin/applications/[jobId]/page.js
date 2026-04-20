@@ -120,9 +120,8 @@ export default async function Page({ params, searchParams }) {
           </div>
         )}
       </div>
-      {totalPages > 1 && (
-        <PaginationControls currentPage={page} totalPages={totalPages} />
-      )}
+
+      <PaginationControls currentPage={page} totalPages={totalPages} />
     </div>
   );
 }
