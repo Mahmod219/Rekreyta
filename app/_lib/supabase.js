@@ -7,7 +7,16 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // 1. العميل العام (للمتصفح والعمليات العادية التي تخضع للـ RLS)
 // هذا العميل آمن للاستخدام في أي مكان (Client/Server)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    "⚠️ Supabase credentials are missing. Check your environment variables.",
+  );
+}
+
+export const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
 
 // 2. العميل "الخارق" (للعمليات الإدارية فقط)
 // أضفنا فحصاً بسيطاً للتأكد من أنه لا يعمل إلا على السيرفر
