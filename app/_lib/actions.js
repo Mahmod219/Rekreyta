@@ -720,7 +720,7 @@ export async function applyToJobb(prevState, formData) {
         cv_url: finalCvUrl,
         another_url: finalAnotherUrl,
         coverletter: coverLetter,
-        match_score: matchScore,
+        match_score: Math.round(matchScore > 1 ? matchScore : matchScore * 100),
         ai_analysis: aiAnalysis,
       });
 

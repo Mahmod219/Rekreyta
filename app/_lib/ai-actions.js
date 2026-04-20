@@ -53,35 +53,3 @@ export async function getMatchScoreFromAI(resumeText, jobDescription) {
     };
   }
 }
-
-export async function generateEmbedding(text) {
-  try {
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, // تأكد من اسم المتغير
-      },
-      body: JSON.stringify({
-        input: text,
-        model: "text-embedding-3-small",
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("OpenAI Error Details:", result); // هذا سيخبرك بالسبب الحقيقي (مثل رصيد منتهي أو نص طويل)
-      return null;
-    }
-
-    if (result.data && result.data.length > 0) {
-      return result.data[0].embedding;
-    }
-
-    return null;
-  } catch (err) {
-    console.error("Fetch Exception:", err.message);
-    return null;
-  }
-}
