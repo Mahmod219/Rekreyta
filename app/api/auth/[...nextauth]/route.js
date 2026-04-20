@@ -7,11 +7,13 @@ function getSupabaseToken(user) {
   const payload = {
     sub: user.id,
     email: user.email,
+    role: "authenticated", // هذا ما يبحث عنه السوبابيس
     app_metadata: {
-      role: user.role,
+      role: user.role, // الرتبة الخاصة بك (admin/user)
     },
-    role: "authenticated",
-    exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    user_metadata: {},
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // اجعلها يوم كامل لتجنب انتهاء الجلسة فجأة
   };
 
   return jwt.sign(payload, process.env.SUPABASE_JWT_SECRET);
