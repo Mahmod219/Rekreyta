@@ -23,41 +23,41 @@ export async function generateEmbedding(text) {
 
     console.log("🔄 Generating embedding...");
 
-    // الرابط المحدث والأكثر استقراراً
+    // الرابط الأساسي بدون أي إضافات (هذا هو الرابط الرسمي الموصى به)
     const MODEL_URL =
-      "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2";
+      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2";
 
     const response = await fetch(MODEL_URL, {
       headers: {
         Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
+        // أحياناً يساعد هذا الهيدر في توجيه الطلب بشكل صحيح
+        "x-use-cache": "false",
       },
       method: "POST",
       body: JSON.stringify({
         inputs: text,
-        options: { wait_for_model: true },
+        options: {
+          wait_for_model: true,
+          use_cache: false,
+        },
       }),
     });
 
-    const contentType = response.headers.get("content-type");
-
-    // التحقق من الاستجابة
+    // إذا استمر الخطأ 404 بصفحة HTML، فهذا يعني أن هناك مشكلة في الـ Environment Variable
     if (!response.ok) {
+      const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const errorData = await response.json();
-        console.error("❌ API Error Detail:", errorData);
+        console.error("❌ API Error:", errorData);
       } else {
-        const errorText = await response.text();
         console.error(
-          "❌ Critical HTML Error Received. Status:",
-          response.status,
+          `❌ Status ${response.status}: Server refused the connection.`,
         );
-        console.error("❌ Server Response:", errorText.slice(0, 200));
-
-        // إذا ظهر خطأ 404، فهذا يعني أن الرابط غير صحيح بالنسبة لحسابك
-        if (response.status === 404) {
-          throw new Error(
-            "Model URL not found. Try using the base inference URL.",
+        // تنبيه: تأكد أن TOKEN ليس فارغاً
+        if (!process.env.HUGGINGFACE_ACCESS_TOKEN) {
+          console.error(
+            "⚠️ WARNING: HUGGINGFACE_ACCESS_TOKEN is missing in Production!",
           );
         }
       }
@@ -66,14 +66,20 @@ export async function generateEmbedding(text) {
 
     const embedding = await response.json();
 
+    // ملاحظة: الموديلات أحياناً تعيد مصفوفة داخل مصفوفة [[...]]
+    // سنقوم بتسطيحها (flatten) لضمان توافقها مع Supabase
     if (Array.isArray(embedding)) {
-      console.log("✅ Success!");
-      return embedding;
+      const finalArray = Array.isArray(embedding[0]) ? embedding[0] : embedding;
+      console.log(
+        "✅ Successfully generated embedding array of length:",
+        finalArray.length,
+      );
+      return finalArray;
     }
 
     return null;
   } catch (err) {
-    console.error("❌ Embedding Failed:", err.message);
+    console.error("❌ Critical Failure:", err.message);
     return null;
   }
 }
