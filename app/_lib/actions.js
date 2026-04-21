@@ -21,65 +21,63 @@ export async function generateEmbedding(text) {
   try {
     if (!text || text.trim().length === 0) return null;
 
-    console.log("🔄 Generating embedding...");
+    // 1. فحص وجود التوكن (سيظهر في Vercel Logs)
+    const token = process.env.HUGGINGFACE_ACCESS_TOKEN;
+    if (!token) {
+      console.error(
+        "❌ ERROR: HUGGINGFACE_ACCESS_TOKEN is not defined in environment variables!",
+      );
+      return null;
+    }
 
-    // الرابط الأساسي بدون أي إضافات (هذا هو الرابط الرسمي الموصى به)
-    const MODEL_URL =
-      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2";
+    console.log("🔄 Sending request to Hugging Face...");
 
-    const response = await fetch(MODEL_URL, {
-      headers: {
-        Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-        // أحياناً يساعد هذا الهيدر في توجيه الطلب بشكل صحيح
-        "x-use-cache": "false",
-      },
+    // 2. استخدام الرابط الأساسي مع التأكد من عدم وجود سلاش إضافي في النهاية
+    const MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2";
+    const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
+
+    const response = await fetch(API_URL, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.trim()}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         inputs: text,
-        options: {
-          wait_for_model: true,
-          use_cache: false,
-        },
+        options: { wait_for_model: true },
       }),
     });
 
-    // إذا استمر الخطأ 404 بصفحة HTML، فهذا يعني أن هناك مشكلة في الـ Environment Variable
+    // 3. معالجة الرد
     if (!response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const errorData = await response.json();
-        console.error("❌ API Error:", errorData);
+      const isJson = response.headers
+        .get("content-type")
+        ?.includes("application/json");
+      if (isJson) {
+        const errJson = await response.json();
+        console.error("❌ API Error Detail:", errJson);
       } else {
+        const errText = await response.text();
         console.error(
-          `❌ Status ${response.status}: Server refused the connection.`,
+          `❌ HTML Error (Status ${response.status}):`,
+          errText.slice(0, 150),
         );
-        // تنبيه: تأكد أن TOKEN ليس فارغاً
-        if (!process.env.HUGGINGFACE_ACCESS_TOKEN) {
-          console.error(
-            "⚠️ WARNING: HUGGINGFACE_ACCESS_TOKEN is missing in Production!",
-          );
-        }
       }
       return null;
     }
 
-    const embedding = await response.json();
+    const result = await response.json();
 
-    // ملاحظة: الموديلات أحياناً تعيد مصفوفة داخل مصفوفة [[...]]
-    // سنقوم بتسطيحها (flatten) لضمان توافقها مع Supabase
-    if (Array.isArray(embedding)) {
-      const finalArray = Array.isArray(embedding[0]) ? embedding[0] : embedding;
-      console.log(
-        "✅ Successfully generated embedding array of length:",
-        finalArray.length,
-      );
-      return finalArray;
+    // 4. معالجة شكل الرد (أحياناً تعيد HF مصفوفة متداخلة)
+    if (Array.isArray(result)) {
+      const finalEmbedding = Array.isArray(result[0]) ? result[0] : result;
+      console.log("✅ Embedding success! Length:", finalEmbedding.length);
+      return finalEmbedding;
     }
 
     return null;
   } catch (err) {
-    console.error("❌ Critical Failure:", err.message);
+    console.error("❌ Critical Code Failure:", err.message);
     return null;
   }
 }
