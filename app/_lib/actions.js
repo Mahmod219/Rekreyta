@@ -19,8 +19,7 @@ import { getSupabaseAdmin, getSupabaseWithAuth, supabase } from "./supabase";
 
 export async function generateEmbedding(text) {
   try {
-    // التأكد من وجود نص لمعالجته
-    if (!text) return null;
+    if (!text || text.trim().length === 0) return null;
 
     console.log("🔄 Generating embedding via Hugging Face API...");
 
@@ -32,27 +31,45 @@ export async function generateEmbedding(text) {
           "Content-Type": "application/json",
         },
         method: "POST",
-        body: JSON.stringify({ inputs: text }),
+        body: JSON.stringify({
+          inputs: text,
+          options: { wait_for_model: true }, // يمنع خطأ 503 إذا كان الموديل في وضع الخمول
+        }),
       },
     );
 
+    // 1. التحقق مما إذا كانت الاستجابة JSON أم HTML (صفحة خطأ)
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const rawResponse = await response.text();
+      console.error(
+        "❌ Received non-JSON response (likely HTML error page):",
+        rawResponse.slice(0, 500),
+      );
+      throw new Error(
+        "Hugging Face returned HTML instead of JSON. Check API Key or Model status.",
+      );
+    }
+
+    // 2. معالجة الأخطاء البرمجية من الـ API
     if (!response.ok) {
       const errorData = await response.json();
       console.error("❌ Hugging Face API Error Details:", errorData);
-      throw new Error(`API Error: ${response.statusText}`);
+      throw new Error(errorData.error || `API Error: ${response.statusText}`);
     }
 
     const embedding = await response.json();
 
-    // التحقق من أن النتيجة مصفوفة أرقام (Array) كما يتوقع سوبابيس
+    // 3. التحقق من صحة مصفوفة الأرقام
     if (Array.isArray(embedding)) {
       console.log("✅ AI Embedding generated successfully!");
       return embedding;
     } else {
-      console.error("❌ Unexpected response format from AI API");
+      console.error("❌ Unexpected response format (Not an array):", embedding);
       return null;
     }
   } catch (err) {
+    // طباعة تفصيلية للخطأ في Vercel Logs
     console.error("❌ Embedding Process Failed:", err.message);
     return null;
   }
