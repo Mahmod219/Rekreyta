@@ -21,56 +21,59 @@ export async function generateEmbedding(text) {
   try {
     if (!text || text.trim().length === 0) return null;
 
-    console.log("🔄 Generating embedding via Hugging Face API...");
+    console.log("🔄 Generating embedding...");
 
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          inputs: text,
-          options: { wait_for_model: true }, // يمنع خطأ 503 إذا كان الموديل في وضع الخمول
-        }),
+    // الرابط المحدث والأكثر استقراراً
+    const MODEL_URL =
+      "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2";
+
+    const response = await fetch(MODEL_URL, {
+      headers: {
+        Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
       },
-    );
+      method: "POST",
+      body: JSON.stringify({
+        inputs: text,
+        options: { wait_for_model: true },
+      }),
+    });
 
-    // 1. التحقق مما إذا كانت الاستجابة JSON أم HTML (صفحة خطأ)
     const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const rawResponse = await response.text();
-      console.error(
-        "❌ Received non-JSON response (likely HTML error page):",
-        rawResponse.slice(0, 500),
-      );
-      throw new Error(
-        "Hugging Face returned HTML instead of JSON. Check API Key or Model status.",
-      );
-    }
 
-    // 2. معالجة الأخطاء البرمجية من الـ API
+    // التحقق من الاستجابة
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Hugging Face API Error Details:", errorData);
-      throw new Error(errorData.error || `API Error: ${response.statusText}`);
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        console.error("❌ API Error Detail:", errorData);
+      } else {
+        const errorText = await response.text();
+        console.error(
+          "❌ Critical HTML Error Received. Status:",
+          response.status,
+        );
+        console.error("❌ Server Response:", errorText.slice(0, 200));
+
+        // إذا ظهر خطأ 404، فهذا يعني أن الرابط غير صحيح بالنسبة لحسابك
+        if (response.status === 404) {
+          throw new Error(
+            "Model URL not found. Try using the base inference URL.",
+          );
+        }
+      }
+      return null;
     }
 
     const embedding = await response.json();
 
-    // 3. التحقق من صحة مصفوفة الأرقام
     if (Array.isArray(embedding)) {
-      console.log("✅ AI Embedding generated successfully!");
+      console.log("✅ Success!");
       return embedding;
-    } else {
-      console.error("❌ Unexpected response format (Not an array):", embedding);
-      return null;
     }
+
+    return null;
   } catch (err) {
-    // طباعة تفصيلية للخطأ في Vercel Logs
-    console.error("❌ Embedding Process Failed:", err.message);
+    console.error("❌ Embedding Failed:", err.message);
     return null;
   }
 }
