@@ -21,25 +21,16 @@ export async function generateEmbedding(text) {
   try {
     if (!text || text.trim().length === 0) return null;
 
-    // 1. فحص وجود التوكن (سيظهر في Vercel Logs)
-    const token = process.env.HUGGINGFACE_ACCESS_TOKEN;
-    if (!token) {
-      console.error(
-        "❌ ERROR: HUGGINGFACE_ACCESS_TOKEN is not defined in environment variables!",
-      );
-      return null;
-    }
+    console.log("🔄 Generating embedding via HF Router...");
 
-    console.log("🔄 Sending request to Hugging Face...");
-
-    // 2. استخدام الرابط الأساسي مع التأكد من عدم وجود سلاش إضافي في النهاية
-    const MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2";
-    const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
+    // الرابط الذي نجح معك في Postman
+    const API_URL =
+      "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction";
 
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token.trim()}`,
+        Authorization: `Bearer ${process.env.HUGGINGFACE_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -48,36 +39,30 @@ export async function generateEmbedding(text) {
       }),
     });
 
-    // 3. معالجة الرد
     if (!response.ok) {
-      const isJson = response.headers
-        .get("content-type")
-        ?.includes("application/json");
-      if (isJson) {
-        const errJson = await response.json();
-        console.error("❌ API Error Detail:", errJson);
-      } else {
-        const errText = await response.text();
-        console.error(
-          `❌ HTML Error (Status ${response.status}):`,
-          errText.slice(0, 150),
-        );
-      }
+      const errorText = await response.text();
+      console.error(
+        `❌ API Error (${response.status}):`,
+        errorText.slice(0, 200),
+      );
       return null;
     }
 
     const result = await response.json();
 
-    // 4. معالجة شكل الرد (أحياناً تعيد HF مصفوفة متداخلة)
+    // معالجة النتيجة: التأكد من أنها مصفوفة (Array)
+    // ملاحظة: الـ Router أحياناً يعيد النتيجة مباشرة كمصفوفة أرقام
     if (Array.isArray(result)) {
+      // إذا كانت النتيجة مصفوفة داخل مصفوفة [[...]] نأخذ الأولى
       const finalEmbedding = Array.isArray(result[0]) ? result[0] : result;
       console.log("✅ Embedding success! Length:", finalEmbedding.length);
       return finalEmbedding;
     }
 
+    console.error("❌ Unexpected result format:", result);
     return null;
   } catch (err) {
-    console.error("❌ Critical Code Failure:", err.message);
+    console.error("❌ Critical Failure in generateEmbedding:", err.message);
     return null;
   }
 }
